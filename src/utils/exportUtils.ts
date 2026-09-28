@@ -1,6 +1,6 @@
-import { Observation, Event, TransectFinding, InSARFinding } from '../types/domain';
+import { Observation, Event, TransectFinding, InSARFinding, DecisionRecord } from '../types/domain';
 import { formatToIST, DEFAULT_DEMO_CLOCK_UTC } from './dateUtils';
-import { formatMetricValue } from './formatters';
+import { Assessment, POSTURE_COPY } from './decisionEngine';
 
 /**
  * Downloads a text content as a file in the browser
@@ -98,4 +98,69 @@ export function exportTransectsCSV(transects: TransectFinding[], insarPoints: In
   });
 
   downloadBlob(csv, `Samast_Geospatial_Findings_${new Date().toISOString().slice(0, 10)}.csv`);
+}
+
+export function buildHandoverBrief(
+  assessment: Assessment,
+  decisions: DecisionRecord[],
+  completedActionIds: string[],
+  assetName = 'Bridge 249'
+): string {
+  const lines: string[] = [];
+  const rule = '-'.repeat(72);
+  lines.push(`SAMAST SHIFT HANDOVER BRIEF - ${assetName} (BR-249, Yamuna, Delhi)`);
+  lines.push('Synthetic demonstration data. Not for operational use.');
+  lines.push(`Evaluated: ${formatToIST(assessment.evaluatedAt)} | Rule set: ${assessment.ruleSetVersion}`);
+  lines.push(rule);
+  lines.push(`RECOMMENDED POSTURE: ${POSTURE_COPY[assessment.posture].label.toUpperCase()} (${assessment.confidence} confidence)`);
+  lines.push(POSTURE_COPY[assessment.posture].summary);
+  assessment.postureDrivers.forEach((d) => lines.push(`  - ${d}`));
+
+  const latest = decisions[0];
+  lines.push('');
+  lines.push('LATEST RECORDED DECISION');
+  if (latest) {
+    lines.push(`  ${latest.id}: ${POSTURE_COPY[latest.selectedPosture].label} by ${latest.recordedBy} at ${formatToIST(latest.recordedAt)}`);
+    if (latest.rationale) lines.push(`  Rationale: ${latest.rationale}`);
+  } else {
+    lines.push('  None recorded this shift.');
+  }
+
+  lines.push('');
+  lines.push('EVIDENCE');
+  assessment.factors.forEach((f) => {
+    lines.push(`  [${f.level.toUpperCase().padEnd(7)}] ${f.label}: ${f.value}`);
+    lines.push(`            ${f.rationale}`);
+  });
+
+  lines.push('');
+  lines.push('ACTIONS');
+  if (assessment.actions.length === 0) lines.push('  None.');
+  assessment.actions.forEach((a) => {
+    const mark = completedActionIds.includes(a.id) ? 'x' : ' ';
+    lines.push(`  [${mark}] ${a.title} (${a.owner}${a.procedure ? `, ${a.procedure}` : ''})`);
+  });
+
+  lines.push('');
+  lines.push('COMING UP');
+  assessment.outlook.forEach((o) => {
+    const window = o.windowEnd ? `${formatToIST(o.windowStart)} to ${formatToIST(o.windowEnd)}` : formatToIST(o.windowStart);
+    lines.push(`  ${window}: ${o.label}`);
+  });
+
+  lines.push('');
+  lines.push('EVIDENCE GAPS');
+  assessment.gaps.forEach((g) => lines.push(`  - ${g.label}: ${g.impact}`));
+  lines.push(rule);
+  lines.push('Operating restrictions are issued by the Section Engineer (Bridges), not by Samast.');
+  return lines.join('\n');
+}
+
+export function exportHandoverBrief(
+  assessment: Assessment,
+  decisions: DecisionRecord[],
+  completedActionIds: string[]
+) {
+  const content = buildHandoverBrief(assessment, decisions, completedActionIds);
+  downloadBlob(content, `Samast_Handover_BR249_${assessment.evaluatedAt.slice(0, 10)}.txt`, 'text/plain;charset=utf-8;');
 }

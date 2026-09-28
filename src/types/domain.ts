@@ -350,6 +350,48 @@ export type ScenarioId =
   | 'insar_low_coherence'
   | 'provisional_nisar';
 
+export type DecisionLevel = 'normal' | 'watch' | 'warning' | 'unknown';
+
+export type DecisionDomain = 'structure' | 'hydrology' | 'ground' | 'data';
+
+export type OperatingPosture = 'normal' | 'heightened_watch' | 'restriction_review' | 'suspension_review';
+
+export interface DecisionFactorSnapshot {
+  factorId: string;
+  level: DecisionLevel;
+  value: string;
+}
+
+export interface DecisionRecordInput {
+  assetId: string;
+  recordedBy: string;
+  recommendedPosture: OperatingPosture;
+  selectedPosture: OperatingPosture;
+  rationale: string;
+  ruleSetVersion: string;
+  scenarioId: ScenarioId;
+  factorSnapshot: DecisionFactorSnapshot[];
+  completedActionIds: string[];
+}
+
+export interface DecisionRecord extends DecisionRecordInput {
+  id: string;
+  recordedAt: string;
+}
+
+export interface CandidateSource {
+  id: string;
+  name: string;
+  provider: string;
+  category: 'hydrology' | 'weather' | 'satellite' | 'structural' | 'hazard';
+  adds: string;
+  decisionUse: string;
+  access: 'Open, no key' | 'Free account' | 'Data-sharing agreement' | 'Published bulletins';
+  cadence: string;
+  url: string;
+  status: 'not_connected' | 'fixture_only';
+}
+
 export interface DemoScenario {
   id: ScenarioId;
   name: string;

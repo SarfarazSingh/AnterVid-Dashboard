@@ -2,17 +2,8 @@ import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { formatToIST } from '../../utils/dateUtils';
 import { TimeRangeSelector } from '../shared/TimeRangeSelector';
-import {
-  Activity,
-  Layers,
-  FileSpreadsheet,
-  Settings,
-  Bell,
-  Pause,
-  Play,
-  CheckCircle2,
-  AlertTriangle,
-} from 'lucide-react';
+import { ALL_SCENARIOS } from '../../fixtures/scenariosData';
+import { Activity, FileSpreadsheet, Settings, Bell, Pause, Play } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const {
@@ -31,6 +22,8 @@ export const Header: React.FC = () => {
     setIsScenarioSwitcherOpen,
   } = useApp();
 
+  const scenarioName =
+    ALL_SCENARIOS.find((s) => s.id === currentScenario)?.name.replace(/^\d+\.\s*/, '') ?? currentScenario;
   const unacknowledgedEvents = events.filter((e) => e.workflowStatus === 'unacknowledged');
   const hasCritical = unacknowledgedEvents.some((e) => e.condition === 'warning' || e.condition === 'critical');
   const hasAuthRequired = sourceStatuses.some((s) => s.accessState === 'authentication_required');
@@ -38,9 +31,9 @@ export const Header: React.FC = () => {
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14 gap-4">
+        <div className="flex items-center justify-between min-h-14 py-2 gap-3">
           {/* Brand & Asset Identity */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-base tracking-tight text-slate-900">
@@ -58,7 +51,7 @@ export const Header: React.FC = () => {
             <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
 
             {/* Asset Selector */}
-            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded px-2.5 py-1 text-xs">
+            <div className="hidden sm:flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded px-2.5 py-1 text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
               <span className="font-semibold text-slate-800">{asset?.name || 'Bridge 249'}</span>
               <span className="text-slate-400 text-[11px] hidden md:inline">
@@ -67,17 +60,19 @@ export const Header: React.FC = () => {
             </div>
 
             {/* Explicit Demo Badge */}
-            <span
-              className="badge badge-demo cursor-pointer"
+            <button
+              type="button"
+              className="badge badge-demo cursor-pointer max-w-[16rem] truncate"
               onClick={() => setIsScenarioSwitcherOpen(true)}
-              title="Click to change deterministic demonstration scenario"
+              title={`Demo scenario: ${scenarioName}. Click to change.`}
             >
-              DEMO MODE
-            </span>
+              <span>Demo</span>
+              <span className="hidden xl:inline normal-case font-semibold truncate">· {scenarioName}</span>
+            </button>
           </div>
 
           {/* Clock, Time Range & Tools */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Controlled Demo Clock */}
             <div
               className="hidden lg:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded px-2.5 py-1 text-xs"
@@ -118,9 +113,10 @@ export const Header: React.FC = () => {
                   : 'btn-secondary text-slate-700'
               }`}
               title="Open Operator Event Timeline & Drawer"
+              aria-label={`Events, ${unacknowledgedEvents.length} unacknowledged`}
             >
               <Bell size={14} />
-              <span>Events</span>
+              <span className="hidden sm:inline">Events</span>
               {unacknowledgedEvents.length > 0 && (
                 <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500 text-white">
                   {unacknowledgedEvents.length}
@@ -134,6 +130,7 @@ export const Header: React.FC = () => {
               onClick={() => setIsDataSourcesModalOpen(true)}
               className="btn btn-secondary btn-sm"
               title="Inspect Upstream Data Feed Connections & Latency"
+              aria-label="Data sources"
             >
               <Activity size={14} className={hasAuthRequired ? 'text-amber-600' : 'text-slate-500'} />
               <span className="hidden sm:inline">Data Sources</span>
@@ -145,6 +142,7 @@ export const Header: React.FC = () => {
               onClick={() => setIsReportsModalOpen(true)}
               className="btn btn-secondary btn-sm"
               title="Generate Synthetic CSV and Print Summaries"
+              aria-label="Reports"
             >
               <FileSpreadsheet size={14} className="text-slate-500" />
               <span className="hidden sm:inline">Reports</span>
@@ -156,6 +154,7 @@ export const Header: React.FC = () => {
               onClick={() => setIsScenarioSwitcherOpen(true)}
               className="btn btn-primary btn-sm"
               title="Switch Demo Scenarios (Scour, River Warning, Outage, etc.)"
+              aria-label="Scenarios"
             >
               <Settings size={14} />
               <span className="hidden sm:inline">Scenarios</span>

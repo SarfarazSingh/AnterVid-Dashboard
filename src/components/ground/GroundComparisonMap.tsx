@@ -266,7 +266,7 @@ export const GroundComparisonMap: React.FC<GroundComparisonMapProps> = ({
               </div>
             )}
 
-            {/* Layer 2: Date 2 / Comparison Monsoon Surge Satellite (20 Sep 2026) clipped by Swipe Slider */}
+            {/* Layer 2: Date 2 / Comparison Monsoon Surge Satellite (06 Sep 2026) clipped by Swipe Slider */}
             {mapStyle === 'satellite' && comparisonMode === 'swipe' && (
               <div
                 className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none"

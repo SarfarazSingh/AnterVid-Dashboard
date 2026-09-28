@@ -14,6 +14,8 @@ import {
   Event,
   SourceStatus,
   ScenarioId,
+  DecisionRecord,
+  DecisionRecordInput,
 } from '../types/domain';
 import { Repository } from './Repository';
 
@@ -128,6 +130,17 @@ export class HttpRepository implements Repository {
     return this.request<TransectFinding>(`/geospatial/findings/${transectId}/review`, {
       method: 'POST',
       body: JSON.stringify({ status, user, note }),
+    });
+  }
+
+  async getDecisions(assetId: string): Promise<DecisionRecord[]> {
+    return this.request<DecisionRecord[]>(`/assets/${assetId}/decisions`);
+  }
+
+  async recordDecision(input: DecisionRecordInput): Promise<DecisionRecord> {
+    return this.request<DecisionRecord>(`/assets/${input.assetId}/decisions`, {
+      method: 'POST',
+      body: JSON.stringify(input),
     });
   }
 

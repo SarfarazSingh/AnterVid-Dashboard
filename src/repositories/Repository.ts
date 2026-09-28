@@ -14,6 +14,8 @@ import {
   Event,
   SourceStatus,
   ScenarioId,
+  DecisionRecord,
+  DecisionRecordInput,
 } from '../types/domain';
 
 export interface Repository {
@@ -36,6 +38,10 @@ export interface Repository {
   acknowledgeEvent(eventId: string, user: string, note?: string): Promise<Event>;
   addEventNote(eventId: string, user: string, note: string): Promise<Event>;
   reviewTransect(transectId: string, status: 'reviewed' | 'rejected', user: string, note: string): Promise<TransectFinding>;
+
+  // Operating decision log (append-only)
+  getDecisions(assetId: string): Promise<DecisionRecord[]>;
+  recordDecision(input: DecisionRecordInput): Promise<DecisionRecord>;
 
   // Scenario management
   getScenario(): Promise<ScenarioId>;

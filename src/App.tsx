@@ -6,15 +6,16 @@ import { NavigationTabs } from './components/shell/NavigationTabs';
 import { BridgeSensorsTab } from './components/bridge/BridgeSensorsTab';
 import { RiverIntelligenceTab } from './components/river/RiverIntelligenceTab';
 import { GroundAndBanksTab } from './components/ground/GroundAndBanksTab';
+import { AnalysisDecisionsTab } from './components/analysis/AnalysisDecisionsTab';
 import { EventDrawer } from './components/events/EventDrawer';
 import { DataSourcesModal } from './components/sources/DataSourcesModal';
 import { ReportsModal } from './components/reports/ReportsModal';
 import { ScenarioSwitcherModal } from './components/scenarios/ScenarioSwitcherModal';
 import { ProvenanceDrawer } from './components/shared/ProvenanceDrawer';
-import { AlertCircle, Shield, Info } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 const MainContent: React.FC = () => {
-  const { activeTab, provenanceTarget, closeProvenance, isLoading, error } = useApp();
+  const { activeTab, provenanceTarget, closeProvenance, isLoading, isRefreshing, error } = useApp();
 
   if (isLoading) {
     return (
@@ -46,11 +47,24 @@ const MainContent: React.FC = () => {
       {/* Primary Analytical Tabs Navigation */}
       <NavigationTabs />
 
+      <div className="h-0.5 relative overflow-hidden" aria-hidden={!isRefreshing}>
+        {isRefreshing && <div className="absolute inset-0 bg-blue-500 animate-pulse" />}
+      </div>
+      <span className="sr-only" role="status">
+        {isRefreshing ? 'Updating dashboard data' : ''}
+      </span>
+
       {/* Main Analytical Canvas */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main
+        className={`flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 transition-opacity ${
+          isRefreshing ? 'opacity-60' : ''
+        }`}
+        aria-busy={isRefreshing}
+      >
         {activeTab === 'bridge_sensors' && <BridgeSensorsTab />}
         {activeTab === 'river_intelligence' && <RiverIntelligenceTab />}
         {activeTab === 'ground_and_banks' && <GroundAndBanksTab />}
+        {activeTab === 'analysis_decisions' && <AnalysisDecisionsTab />}
       </main>
 
       {/* Persistent Footer */}

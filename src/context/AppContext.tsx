@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Asset,
   Pier,
@@ -15,12 +15,15 @@ import {
   Event,
   SourceStatus,
   ScenarioId,
+  DecisionRecord,
+  DecisionRecordInput,
 } from '../types/domain';
 import { Repository } from '../repositories/Repository';
 import { MockRepository } from '../repositories/MockRepository';
 import { DEFAULT_DEMO_CLOCK_UTC } from '../utils/dateUtils';
+import { Assessment, assessBridge } from '../utils/decisionEngine';
 
-export type PrimaryTab = 'bridge_sensors' | 'river_intelligence' | 'ground_and_banks';
+export type PrimaryTab = 'bridge_sensors' | 'river_intelligence' | 'ground_and_banks' | 'analysis_decisions';
 export type TimeRangeOption = '24h' | '7d' | '30d' | 'monsoon_season';
 
 interface AppContextType {
@@ -48,7 +51,11 @@ interface AppContextType {
   insarPoints: InSARFinding[];
   events: Event[];
   sourceStatuses: SourceStatus[];
+  decisions: DecisionRecord[];
+  assessment: Assessment | null;
+  completedActionIds: string[];
   isLoading: boolean;
+  isRefreshing: boolean;
   error: string | null;
 
   // Modal & Drawer State
@@ -70,6 +77,8 @@ interface AppContextType {
   acknowledgeEvent: (eventId: string, note?: string) => Promise<void>;
   addEventNote: (eventId: string, note: string) => Promise<void>;
   reviewTransect: (transectId: string, status: 'reviewed' | 'rejected', note: string) => Promise<void>;
+  recordDecision: (input: Omit<DecisionRecordInput, 'assetId' | 'scenarioId'>) => Promise<DecisionRecord>;
+  toggleActionComplete: (actionId: string) => void;
   openProvenance: (title: string, metadata: Record<string, any>) => void;
   closeProvenance: () => void;
   setIsEventsDrawerOpen: (open: boolean) => void;
@@ -114,8 +123,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode; repo?: Repositor
   const [insarPoints, setInSARPoints] = useState<InSARFinding[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [sourceStatuses, setSourceStatuses] = useState<SourceStatus[]>([]);
+  const [decisions, setDecisions] = useState<DecisionRecord[]>([]);
+  const [completedActionIds, setCompletedActionIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const hasLoadedOnce = useRef(false);
 
   // Modal / Drawer states
   const [provenanceTarget, setProvenanceTarget] = useState<{
@@ -131,8 +144,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode; repo?: Repositor
   const [selectedInSARPointId, setSelectedInSARPointId] = useState<string | null>('INSAR-PT-01');
 
   const loadAllData = useCallback(async () => {
+    // Only the first load blanks the workspace; later refreshes keep the current view on screen.
+    const isInitial = !hasLoadedOnce.current;
     try {
-      setIsLoading(true);
+      if (isInitial) {
+        setIsLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
       setError(null);
 
       const [
@@ -151,6 +170,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; repo?: Repositor
         loadedEvents,
         loadedSources,
         scenario,
+        loadedDecisions,
       ] = await Promise.all([
         repository.getAsset('BR-249'),
         repository.getPiers('BR-249'),
@@ -167,6 +187,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; repo?: Repositor
         repository.getEvents(),
         repository.getSourceStatuses(),
         repository.getScenario(),
+        repository.getDecisions('BR-249'),
       ]);
 
       setAsset(loadedAsset);
@@ -184,12 +205,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode; repo?: Repositor
       setEvents(loadedEvents);
       setSourceStatuses(loadedSources);
       setCurrentScenarioState(scenario);
+      setDecisions(loadedDecisions);
+      hasLoadedOnce.current = true;
     } catch (err: any) {
       setError(err?.message || 'Failed to load Samast data repository');
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   }, [repository]);
+
+  const assessment = useMemo<Assessment | null>(() => {
+    if (!asset) return null;
+    return assessBridge({
+      clockIso: demoClockIso,
+      sensors,
+      observations,
+      riverStations,
+      releaseBulletins,
+      riverForecasts,
+      rainfall,
+      transects,
+      insarPoints,
+      layers,
+      scenes,
+      sourceStatuses,
+      events,
+    });
+  }, [
+    asset,
+    demoClockIso,
+    sensors,
+    observations,
+    riverStations,
+    releaseBulletins,
+    riverForecasts,
+    rainfall,
+    transects,
+    insarPoints,
+    layers,
+    scenes,
+    sourceStatuses,
+    events,
+  ]);
 
   useEffect(() => {
     loadAllData();
@@ -219,6 +277,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; repo?: Repositor
   const setScenario = useCallback(
     async (scenarioId: ScenarioId) => {
       await repository.setScenario(scenarioId);
+      setCompletedActionIds([]);
       await loadAllData();
     },
     [repository, loadAllData]
@@ -250,6 +309,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode; repo?: Repositor
     },
     [repository]
   );
+
+  const recordDecision = useCallback(
+    async (input: Omit<DecisionRecordInput, 'assetId' | 'scenarioId'>) => {
+      const record = await repository.recordDecision({
+        ...input,
+        assetId: 'BR-249',
+        scenarioId: currentScenario,
+      });
+      setDecisions(await repository.getDecisions('BR-249'));
+      return record;
+    },
+    [repository, currentScenario]
+  );
+
+  const toggleActionComplete = useCallback((actionId: string) => {
+    setCompletedActionIds((prev) =>
+      prev.includes(actionId) ? prev.filter((id) => id !== actionId) : [...prev, actionId]
+    );
+  }, []);
 
   const openProvenance = useCallback((title: string, metadata: Record<string, any>) => {
     setProvenanceTarget({ title, metadata });
@@ -289,7 +367,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode; repo?: Repositor
         insarPoints,
         events,
         sourceStatuses,
+        decisions,
+        assessment,
+        completedActionIds,
         isLoading,
+        isRefreshing,
         error,
 
         provenanceTarget,
@@ -309,6 +391,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode; repo?: Repositor
         acknowledgeEvent,
         addEventNote,
         reviewTransect,
+        recordDecision,
+        toggleActionComplete,
         openProvenance,
         closeProvenance,
         setIsEventsDrawerOpen,

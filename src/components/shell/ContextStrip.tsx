@@ -1,10 +1,11 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { Radio, AlertTriangle, ShieldCheck, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 export const ContextStrip: React.FC = () => {
   const {
     asset,
+    piers,
     selectedPierId,
     sensors,
     observations,
@@ -14,7 +15,6 @@ export const ContextStrip: React.FC = () => {
   // Calculate commissioned channels count
   const commissionedSensors = sensors.filter((s) => s.capabilities.isCommissioned);
   const totalCommissioned = commissionedSensors.length;
-  const validObservations = observations.filter((o) => o.quality.state === 'good');
   const degradedObservations = observations.filter((o) => o.quality.state === 'degraded' || o.quality.state === 'suspect');
   const missingObservations = observations.filter((o) => o.quality.state === 'missing' || o.quality.state === 'invalid');
 
@@ -32,7 +32,9 @@ export const ContextStrip: React.FC = () => {
             <span>Asset {asset?.id || 'BR-249'}</span>
             <span className="text-slate-400 font-normal">/</span>
             <span className="text-blue-700 font-medium">
-              {selectedPierId ? `Pier ${selectedPierId}` : 'All Spans'}
+              {selectedPierId
+                ? piers.find((p) => p.id === selectedPierId)?.label.replace(/\s*\(.*\)$/, '') ?? selectedPierId
+                : 'All spans'}
             </span>
           </div>
 

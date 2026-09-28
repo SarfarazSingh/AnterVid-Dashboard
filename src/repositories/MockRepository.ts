@@ -14,6 +14,8 @@ import {
   Event,
   SourceStatus,
   ScenarioId,
+  DecisionRecord,
+  DecisionRecordInput,
 } from '../types/domain';
 import { Repository } from './Repository';
 import {
@@ -53,6 +55,8 @@ export class MockRepository implements Repository {
   private insarPoints: InSARFinding[] = JSON.parse(JSON.stringify(INITIAL_INSAR_POINTS));
   private events: Event[] = JSON.parse(JSON.stringify(INITIAL_EVENTS));
   private sourceStatuses: SourceStatus[] = JSON.parse(JSON.stringify(INITIAL_SOURCE_STATUSES));
+  // Operator decisions are an audit record, so scenario switches never reset them.
+  private decisions: DecisionRecord[] = [];
 
   constructor() {
     this.applyScenario('normal');
@@ -178,6 +182,32 @@ export class MockRepository implements Repository {
     tr.analystNote = note;
 
     return JSON.parse(JSON.stringify(tr));
+  }
+
+  async getDecisions(assetId: string): Promise<DecisionRecord[]> {
+    const list = this.decisions.filter((d) => d.assetId === assetId);
+    return JSON.parse(JSON.stringify(list));
+  }
+
+  async recordDecision(input: DecisionRecordInput): Promise<DecisionRecord> {
+    const recordedBy = input.recordedBy.trim();
+    const rationale = input.rationale.trim();
+    if (!recordedBy) {
+      throw new Error('Decision must name the person recording it.');
+    }
+    if (input.selectedPosture !== input.recommendedPosture && rationale.length < 10) {
+      throw new Error('A rationale of at least 10 characters is required when the decision differs from the recommendation.');
+    }
+
+    const record: DecisionRecord = {
+      ...JSON.parse(JSON.stringify(input)),
+      recordedBy,
+      rationale,
+      id: `DEC-${String(this.decisions.length + 1).padStart(4, '0')}`,
+      recordedAt: DEFAULT_DEMO_CLOCK_UTC,
+    };
+    this.decisions.unshift(record);
+    return JSON.parse(JSON.stringify(record));
   }
 
   async getScenario(): Promise<ScenarioId> {
@@ -331,7 +361,7 @@ export class MockRepository implements Repository {
       }
 
       case 'cloudy_satellite_scene': {
-        const s2 = this.scenes.find((s) => s.id === 'S2B_MSIL2A_20260925T054639');
+        const s2 = this.scenes.find((s) => s.id === 'S2B_MSIL2A_20260911T054639');
         if (s2) {
           s2.localUsabilityState = 'cloud_obscured';
         }

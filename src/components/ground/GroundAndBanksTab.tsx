@@ -25,7 +25,7 @@ export const GroundAndBanksTab: React.FC = () => {
   const [comparisonMode, setComparisonMode] = useState<'single' | 'swipe' | 'side_by_side'>('swipe');
 
   // Date Pair
-  const [datePair, setDatePair] = useState<[string, string]>(['15 Aug 2026', '20 Sep 2026']);
+  const [datePair, setDatePair] = useState<[string, string]>(['15 Aug 2026', '06 Sep 2026']);
 
   // Study Area
   const [studyArea, setStudyArea] = useState<'local_bridge' | 'reach_corridor' | 'hydrological'>(
@@ -51,7 +51,7 @@ export const GroundAndBanksTab: React.FC = () => {
     'LAYER-GSI-GEOLOGY': 0.6,
   });
 
-  const [selectedSceneId, setSelectedSceneId] = useState<string>('S2A_MSIL2A_20260920T053641');
+  const [selectedSceneId, setSelectedSceneId] = useState<string>('S2A_MSIL2A_20260906T053641');
 
   const toggleLayer = (id: string) => {
     setLayerVisibility((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -140,13 +140,13 @@ export const GroundAndBanksTab: React.FC = () => {
             value={`${datePair[0]} - ${datePair[1]}`}
             onChange={(e) => {
               const val = e.target.value;
-              if (val.includes('15 Aug')) setDatePair(['15 Aug 2026', '20 Sep 2026']);
-              else setDatePair(['01 Jun 2026', '20 Sep 2026']);
+              if (val.includes('15 Aug')) setDatePair(['15 Aug 2026', '06 Sep 2026']);
+              else setDatePair(['01 Jun 2026', '06 Sep 2026']);
             }}
             className="px-2.5 py-1 border border-slate-200 rounded bg-white text-slate-800 font-medium"
           >
-            <option>15 Aug 2026 - 20 Sep 2026 (Monsoon Surge)</option>
-            <option>01 Jun 2026 - 20 Sep 2026 (Seasonal Pre/Post)</option>
+            <option>15 Aug 2026 - 06 Sep 2026 (Monsoon Surge)</option>
+            <option>01 Jun 2026 - 06 Sep 2026 (Seasonal Pre/Post)</option>
           </select>
         </div>
 

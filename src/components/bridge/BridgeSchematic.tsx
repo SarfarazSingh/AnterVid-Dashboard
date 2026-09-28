@@ -1,18 +1,36 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Pier } from '../../types/domain';
-import { CheckCircle, Info, Layers, Eye, Maximize2, Compass } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import bridgeScourDiagramImg from '../../assets/images/bridge249_scour_diagram.jpg';
+import { THRESHOLDS } from '../../utils/decisionEngine';
+
+const DANGER_LEVEL_M = 205.33;
+const SPAN_START_X = 75;
+const SPAN_END_X = 845;
 
 export const BridgeSchematic: React.FC = () => {
   const { piers, selectedPierId, selectPier, observations, sensors, selectSensor } = useApp();
   const [viewMode, setViewMode] = useState<'schematic' | 'cross_section'>('schematic');
 
-  // Find scour delta for P11
   const s1Obs = observations.find((o) => o.sensorId === 'P11-SON-01');
   const s2Obs = observations.find((o) => o.sensorId === 'P11-SON-02');
   const s3Obs = observations.find((o) => o.sensorId === 'P11-SON-03');
-  const isP11ScourAlert = s2Obs && s2Obs.value !== null && s2Obs.value > 8.6;
+  const s2Baseline = sensors.find((s) => s.id === 'P11-SON-02')?.baselineValues.sonar_range;
+  const s2Drop =
+    s2Obs && s2Obs.value !== null && s2Baseline !== undefined ? s2Obs.value - s2Baseline : null;
+  const isP11ScourAlert = s2Drop !== null && s2Drop >= THRESHOLDS.scourWatchM;
+  const formatRange = (v: number | null | undefined) => (v === null || v === undefined ? 'Not available' : `${v.toFixed(2)} m`);
+
+  const stage = observations.find((o) => o.metric === 'stage_m' && o.sensorId === null)?.value ?? null;
+  // 10 px per metre of stage, anchored so the danger level sits on the dashed line at y=105.
+  const waterY = stage === null ? 115 : Math.max(80, Math.min(150, 105 + (DANGER_LEVEL_M - stage) * 10));
+
+  const spanPiers = piers.filter((p) => p.type === 'pier');
+  const pierSpacing = (SPAN_END_X - SPAN_START_X) / (spanPiers.length + 1);
+  const pierX = (index: number) => SPAN_START_X + (index + 1) * pierSpacing;
+  const p11Index = spanPiers.findIndex((p) => p.id === 'P11');
+  const p11X = p11Index >= 0 ? pierX(p11Index) : 690;
+  const selectedLabel = piers.find((p) => p.id === selectedPierId)?.label ?? selectedPierId ?? 'None';
 
   return (
     <div className="samast-card h-full flex flex-col justify-between shadow-md border-slate-200">
@@ -83,17 +101,18 @@ export const BridgeSchematic: React.FC = () => {
             <div className="space-y-1 font-mono text-[11px]">
               <div className="flex justify-between gap-4">
                 <span className="text-slate-400">Sonar 01 (Upstream):</span>
-                <span className="text-emerald-400 font-bold">{s1Obs?.value?.toFixed(2) ?? '8.42'} m</span>
+                <span className="text-emerald-400 font-bold">{formatRange(s1Obs?.value)}</span>
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-slate-400">Sonar 02 (Center Bed):</span>
                 <span className={isP11ScourAlert ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}>
-                  {s2Obs?.value?.toFixed(2) ?? '8.42'} m ({isP11ScourAlert ? 'SCOUR ALERT' : 'Normal'})
+                  {formatRange(s2Obs?.value)}
+                  {s2Drop !== null && ` (${isP11ScourAlert ? 'scour watch' : 'normal'})`}
                 </span>
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-slate-400">Sonar 03 (Downstream):</span>
-                <span className="text-emerald-400 font-bold">{s3Obs?.value?.toFixed(2) ?? '8.40'} m</span>
+                <span className="text-emerald-400 font-bold">{formatRange(s3Obs?.value)}</span>
               </div>
             </div>
             <div className="text-[10px] text-slate-400 mt-2 border-t border-slate-700 pt-1">
@@ -145,32 +164,36 @@ export const BridgeSchematic: React.FC = () => {
             <rect x="0" y="0" width="920" height="150" fill="url(#skyGradient)" />
 
             {/* Water Body (Yamuna River) */}
-            <rect x="45" y="115" width="830" height="100" fill="url(#waterGradient)" />
+            <rect x="45" y={waterY} width="830" height={215 - waterY} fill="url(#waterGradient)" />
 
             {/* High Water Danger Line (205.33m RL) */}
             <line x1="45" y1="105" x2="875" y2="105" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="5,4" />
-            <text x="52" y="100" fill="#b91c1c" fontSize="9.5" fontWeight="700">
-              Official Danger Level: 205.33m MSL
+            <text x="80" y="100" fill="#b91c1c" fontSize="9.5" fontWeight="700">
+              Danger level {DANGER_LEVEL_M.toFixed(2)} m MSL
             </text>
 
             {/* Current River Surface Water Line */}
-            <line x1="45" y1="115" x2="875" y2="115" stroke="#2563eb" strokeWidth="2.5" />
-            <text x="760" y="128" fill="#1e3a8a" fontSize="9.5" fontWeight="700">
-              Current Stage ~204.28m
+            <line x1="45" y1={waterY} x2="875" y2={waterY} stroke="#2563eb" strokeWidth="2.5" />
+            <text x="835" y={waterY + 13} fill="#1e3a8a" fontSize="9.5" fontWeight="700" textAnchor="end">
+              {stage === null ? 'Stage not available' : `ORB stage ${stage.toFixed(2)} m`}
             </text>
 
             {/* Riverbed / Alluvial Subsurface Profile */}
             <path
-              d="M 45,215 Q 300,215 500,218 Q 670,218 695,236 Q 715,236 735,218 Q 800,215 875,215 L 875,270 L 45,270 Z"
+              d={`M 45,215 Q 300,215 500,218 Q ${p11X - 20},218 ${p11X - 5},236 Q ${p11X + 15},236 ${p11X + 35},218 Q 800,215 875,215 L 875,270 L 45,270 Z`}
               fill="#cbd5e1"
               stroke="#94a3b8"
               strokeWidth="1.5"
             />
 
             {/* Scour Depression Zone under P11 */}
-            <ellipse cx="705" cy="234" rx="40" ry="14" fill="url(#scourGlow)" />
-            <text x="655" y="258" fill="#991b1b" fontSize="9" fontWeight="700">
-              {isP11ScourAlert ? 'Scour Anomaly -0.37m' : 'Monsoon Scour Trench'}
+            <ellipse cx={p11X + 5} cy="234" rx="40" ry="14" fill="url(#scourGlow)" />
+            <text x={p11X - 38} y="200" fill="#991b1b" fontSize="9" fontWeight="700" textAnchor="end">
+              {s2Drop === null
+                ? 'Bed condition unknown'
+                : isP11ScourAlert
+                ? `Bed lowering ${s2Drop.toFixed(2)} m`
+                : 'Bed within baseline'}
             </text>
 
             {/* Bridge Steel Girder Superstructure */}
@@ -190,8 +213,8 @@ export const BridgeSchematic: React.FC = () => {
             </g>
 
             {/* Intermediate Piers P1 through P14 */}
-            {piers.map((pier, index) => {
-              const px = 100 + index * 52;
+            {spanPiers.map((pier, index) => {
+              const px = pierX(index);
               const isP11 = pier.id === 'P11';
               const isSelected = selectedPierId === pier.id;
 
@@ -200,7 +223,18 @@ export const BridgeSchematic: React.FC = () => {
                   key={pier.id}
                   className="cursor-pointer transition-all"
                   onClick={() => selectPier(pier.id)}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={pier.label}
+                  aria-pressed={isSelected}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      selectPier(pier.id);
+                    }
+                  }}
                 >
+                  <title>{pier.label}</title>
                   {/* Pier Caisson Base in riverbed */}
                   <rect
                     x={px - 8}
@@ -264,7 +298,7 @@ export const BridgeSchematic: React.FC = () => {
                     fontWeight={isP11 || isSelected ? 'bold' : 'normal'}
                     textAnchor="middle"
                   >
-                    {pier.label}
+                    {pier.id}
                   </text>
                 </g>
               );
@@ -285,9 +319,7 @@ export const BridgeSchematic: React.FC = () => {
       {/* Selected Pier Quick Summary Bar */}
       <div className="mt-2 pt-2 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-slate-800">
-            Selected: Pier {selectedPierId}
-          </span>
+          <span className="font-bold text-slate-800">Selected: {selectedLabel}</span>
           <span className="text-slate-400">•</span>
           {selectedPierId === 'P11' ? (
             <span className="text-blue-700 font-semibold flex items-center gap-1">
@@ -295,7 +327,10 @@ export const BridgeSchematic: React.FC = () => {
               Commissioned Sensor Suite Active (3 Sonar, 1 Vib/Tilt, KLEON Gateway)
             </span>
           ) : (
-            <span className="text-slate-500">Uninstrumented Pier — Monitored via Visual Inspection</span>
+            <span className="text-slate-500">
+              {selectedPierId?.startsWith('A') ? 'Uninstrumented abutment' : 'Uninstrumented pier'} — monitored by
+              visual inspection
+            </span>
           )}
         </div>
 

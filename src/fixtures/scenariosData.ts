@@ -82,8 +82,8 @@ export const ALL_SCENARIOS: DemoScenario[] = [
     id: 'cloudy_satellite_scene',
     name: '13. Cloudy Latest Scene (Local QA Auto-Fallback)',
     category: 'Ground and Banks',
-    shortDescription: '25 Sep Sentinel-2 scene has 79.4% cloud cover over river corridor.',
-    expectedVisibleBehavior: 'Latest Acquisition selector shows 25 Sep as "Cloud Obscured". Latest Usable Observation automatically selects clean 20 Sep scene.',
+    shortDescription: '11 Sep Sentinel-2 scene has 79.4% cloud cover over river corridor.',
+    expectedVisibleBehavior: 'Latest Acquisition selector shows 11 Sep as "Cloud Obscured". Latest Usable Observation automatically selects clean 06 Sep scene.',
   },
   {
     id: 'mismatched_stage_comparison',
