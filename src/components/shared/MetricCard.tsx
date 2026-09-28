@@ -3,8 +3,10 @@ import { ObservationQuality, Provenance, SourcePolicy, ConditionState } from '..
 import { QualityBadge } from './QualityBadge';
 import { FreshnessLabel } from './FreshnessLabel';
 import { EvidenceBadge } from './EvidenceBadge';
+import { FeedStateChip, type FeedState } from './FeedStateChip';
 import { formatMetricValue } from '../../utils/formatters';
 import { formatToIST } from '../../utils/dateUtils';
+import { useApp } from '../../context/AppContext';
 import { Info, ChevronRight } from 'lucide-react';
 
 interface MetricCardProps {
@@ -31,6 +33,7 @@ interface MetricCardProps {
   isSelected?: boolean;
   onClick?: () => void;
   onOpenProvenance?: () => void;
+  feedState?: FeedState;
 }
 
 export const MetricCard: React.FC<MetricCardProps> = ({
@@ -49,7 +52,14 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   isSelected = false,
   onClick,
   onOpenProvenance,
+  feedState,
 }) => {
+  const { demoClockIso } = useApp();
+  const resolvedFeed =
+    feedState ??
+    (provenance.sourceId === 'samasth-gateway' || provenance.sourceId === 'barrage-bulletin'
+      ? 'fixture'
+      : undefined);
   const isAvailable = value !== null && value !== undefined && !isNaN(value);
   const formattedVal = formatMetricValue(value, metric);
   const isWatch = condition === 'watch';
@@ -87,6 +97,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           {subtitle && <div className="text-[11px] text-slate-400 leading-snug mt-0.5">{subtitle}</div>}
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
+          {resolvedFeed && <FeedStateChip state={resolvedFeed} />}
           <QualityBadge quality={quality.state} reasons={quality.reasons} />
           {onOpenProvenance && (
             <button
@@ -157,7 +168,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       {/* Footer Provenance & Observation Timestamp */}
       <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
         <EvidenceBadge origin={provenance.origin} sourceId={provenance.sourceId} />
-        <FreshnessLabel observedAtIso={observedAt} policy={policy} />
+        <FreshnessLabel observedAtIso={observedAt} policy={policy} referenceClockIso={demoClockIso} />
       </div>
 
       <div className="mt-1 text-[11px] text-slate-400 flex items-center justify-between">

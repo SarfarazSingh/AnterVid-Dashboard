@@ -4,7 +4,7 @@ import { formatToIST } from '../../utils/dateUtils';
 import { SlidersHorizontal, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 
 export const SensorTrendChart: React.FC = () => {
-  const { observations, selectedTimeRange, setTimeRange } = useApp();
+  const { observations, demoClockIso } = useApp();
 
   const [activeChannels, setActiveChannels] = useState<{ [key: string]: boolean }>({
     'P11-SON-01': true,
@@ -14,21 +14,28 @@ export const SensorTrendChart: React.FC = () => {
 
   const [metricMode, setMetricMode] = useState<'sonar' | 'vibration' | 'tilt'>('sonar');
 
-  // Synthetic 24-point time-series samples simulating the selected range with intentional gap handling
-  const timeLabels = [
-    '11 Sep 15:00', '11 Sep 17:00', '11 Sep 19:00', '11 Sep 21:00', '11 Sep 23:00',
-    '12 Sep 01:00', '12 Sep 03:00', '12 Sep 05:00', '12 Sep 07:00', '12 Sep 09:00',
-    '12 Sep 11:00', '12 Sep 13:00', '12 Sep 14:35 (Now)',
-  ];
+  const now = new Date(demoClockIso);
+  const timeLabels = Array.from({ length: 13 }, (_, i) => {
+    const t = new Date(now.getTime() - (12 - i) * 2 * 3600 * 1000);
+    if (i === 12) return 'Now';
+    return formatToIST(t.toISOString(), false, true).replace(' IST', '');
+  });
 
-  // Sonar 01 (Stable ~8.42m)
-  const son1Points = [8.418, 8.420, 8.422, 8.420, 8.425, 8.421, 8.423, 8.424, 8.422, 8.420, 8.424, 8.423, 8.424];
-  
-  // Sonar 02 (Drop from 8.41m to 8.78m scour)
-  const son2Points = [8.410, 8.425, 8.460, 8.510, 8.580, 8.630, 8.680, 8.710, 8.740, 8.750, 8.765, 8.775, 8.780];
+  const latest = (id: string, fallback: number): number => {
+    const obs = observations.find((o) => o.sensorId === id && o.metric === 'sonar_range');
+    return obs && obs.value !== null ? obs.value : fallback;
+  };
 
-  // Sonar 03 (With intentional missing gap at index 5-6 to test gap rule)
-  const son3Points: (number | null)[] = [8.440, 8.442, 8.445, 8.441, null, null, 8.448, 8.452, 8.455, 8.460, 8.461, 8.462, 8.462];
+  const son1Now = latest('P11-SON-01', 8.424);
+  const son2Now = latest('P11-SON-02', 8.75);
+  const son3Now = latest('P11-SON-03', 8.462);
+
+  const lerp = (from: number, to: number, t: number) => from + (to - from) * t;
+  const son1Points = Array.from({ length: 13 }, (_, i) => lerp(8.42, son1Now, i / 12));
+  const son2Points = Array.from({ length: 13 }, (_, i) => lerp(8.41, son2Now, i / 12));
+  const son3Points: (number | null)[] = Array.from({ length: 13 }, (_, i) =>
+    i === 5 || i === 6 ? null : lerp(8.44, son3Now, i / 12)
+  );
 
   const baselineRef = 8.420;
   const watchThreshold = 8.720; // +0.30m threshold
@@ -84,7 +91,7 @@ export const SensorTrendChart: React.FC = () => {
         <div className="flex items-center gap-2">
           <span className="samast-card-title">Telemetry Time-Series & Discontinuity Analysis</span>
           <span className="text-xs text-slate-400 font-normal">
-            (Gap handling: Missing samples show as gaps, not false continuous lines)
+            (Last point is the current fixture reading, rebased to now. Prior points are interpolated history.)
           </span>
         </div>
 

@@ -1,5 +1,5 @@
 import { Observation, Event, TransectFinding, InSARFinding, DecisionRecord } from '../types/domain';
-import { formatToIST, DEFAULT_DEMO_CLOCK_UTC } from './dateUtils';
+import { formatToIST } from './dateUtils';
 import { Assessment, POSTURE_COPY } from './decisionEngine';
 
 /**
@@ -21,7 +21,7 @@ function downloadBlob(content: string, filename: string, mimeType = 'text/csv;ch
  * Generates an operator sensor summary CSV with full metadata and DEMO watermark
  */
 export function exportSensorsCSV(observations: Observation[], assetName = 'Bridge 249') {
-  const generatedAtIST = formatToIST(DEFAULT_DEMO_CLOCK_UTC);
+  const generatedAtIST = formatToIST(new Date().toISOString());
 
   let csv = `# -----------------------------------------------------------------------------\n`;
   csv += `# ANTERVID SAMAST OPERATOR REPORT - SYNTHETIC DEMO EXPORT\n`;
@@ -53,7 +53,7 @@ export function exportSensorsCSV(observations: Observation[], assetName = 'Bridg
  * Generates an Events audit log CSV
  */
 export function exportEventsCSV(events: Event[]) {
-  const generatedAtIST = formatToIST(DEFAULT_DEMO_CLOCK_UTC);
+  const generatedAtIST = formatToIST(new Date().toISOString());
 
   let csv = `# -----------------------------------------------------------------------------\n`;
   csv += `# ANTERVID SAMAST OPERATOR EVENT AUDIT LOG - SYNTHETIC DEMO EXPORT\n`;
@@ -76,7 +76,7 @@ export function exportEventsCSV(events: Event[]) {
  * Generates Ground and Riverbank transect findings CSV
  */
 export function exportTransectsCSV(transects: TransectFinding[], insarPoints: InSARFinding[]) {
-  const generatedAtIST = formatToIST(DEFAULT_DEMO_CLOCK_UTC);
+  const generatedAtIST = formatToIST(new Date().toISOString());
 
   let csv = `# -----------------------------------------------------------------------------\n`;
   csv += `# ANTERVID SAMAST GEOSPATIAL & RIVERBANK TRANSECT FINDINGS - DEMO EXPORT\n`;

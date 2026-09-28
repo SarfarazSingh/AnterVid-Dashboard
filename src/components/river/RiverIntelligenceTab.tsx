@@ -6,14 +6,18 @@ import { RiverNetworkSchematic } from './RiverNetworkSchematic';
 import { BarrageReleaseTable } from './BarrageReleaseTable';
 import { RainfallPanel } from './RainfallPanel';
 import { INITIAL_SOURCE_POLICIES } from '../../fixtures/baselineData';
-import { Waves, CloudRain, Radio, Compass } from 'lucide-react';
+import { FeedStateChip, LIVE_FEED_IDS, feedStateForSource } from '../shared/FeedStateChip';
 
 export const RiverIntelligenceTab: React.FC = () => {
-  const { observations, riverForecasts, rainfall, releaseBulletins, openProvenance } = useApp();
+  const { observations, riverForecasts, rainfall, releaseBulletins, openProvenance, sourceStatuses } = useApp();
 
   const cwcPolicy = INITIAL_SOURCE_POLICIES['cwc-official'];
   const barragePolicy = INITIAL_SOURCE_POLICIES['barrage-bulletin'];
-  const imergPolicy = INITIAL_SOURCE_POLICIES['nasa-imerg-early'];
+  const rainPolicy = INITIAL_SOURCE_POLICIES['open-meteo'] ?? INITIAL_SOURCE_POLICIES['nasa-imerg-early'];
+
+  const cwcStatus = sourceStatuses.find((s) => s.sourceId === 'cwc-official');
+  const rainStatus = sourceStatuses.find((s) => s.sourceId === 'open-meteo') ?? sourceStatuses.find((s) => s.sourceId === 'nasa-imerg-early');
+  const glofasStatus = sourceStatuses.find((s) => s.sourceId === 'glofas');
 
   // CWC observation (ORB gauge)
   const cwcObs = observations.find((o) => o.metric === 'stage_m' && o.sensorId === null);
@@ -25,9 +29,11 @@ export const RiverIntelligenceTab: React.FC = () => {
   // Upper basin rainfall
   const basinRain = rainfall.find((r) => r.locationType === 'upstream_basin');
 
-  // Active forecast count
-  const activeFc = riverForecasts.find((f) => f.issuer === 'CWC Official');
+  const officialFc = riverForecasts.find((f) => f.issuer === 'CWC Official');
+  const glofasFc = riverForecasts.find((f) => f.issuer === 'GloFAS-ECMWF Model');
   const isHighStage = cwcObs && cwcObs.value !== null && cwcObs.value >= 204.50;
+  const liveDischarge = glofasFc?.forecastPoints.find((p) => p.dischargeM3s != null)?.dischargeM3s;
+  const rainHours = basinRain?.locationType === 'upstream_basin' ? 48 : 24;
 
   return (
     <div className="space-y-6">
@@ -52,13 +58,19 @@ export const RiverIntelligenceTab: React.FC = () => {
             unit: 'm',
           }}
           companion={
-            cwcDischarge && cwcDischarge.value !== null
+            liveDischarge != null
               ? {
-                  label: 'CWC daily discharge',
+                  label: 'GloFAS modelled discharge (not stage)',
+                  value: `${Math.round(liveDischarge).toLocaleString('en-IN')} m³/s`,
+                }
+              : cwcDischarge && cwcDischarge.value !== null
+              ? {
+                  label: 'CWC daily discharge (fixture)',
                   value: `${Math.round(cwcDischarge.value).toLocaleString('en-IN')} cusecs`,
                 }
               : undefined
           }
+          feedState={feedStateForSource('cwc-official', cwcStatus?.accessState, LIVE_FEED_IDS)}
           onOpenProvenance={cwcObs ? () => openProvenance('Official CWC River Gauge (ORB)', cwcObs) : undefined}
         />
 
@@ -82,6 +94,7 @@ export const RiverIntelligenceTab: React.FC = () => {
           }}
           policy={barragePolicy}
           condition="within_range"
+          feedState="fixture"
           companion={
             wazirabad
               ? {
@@ -112,26 +125,32 @@ export const RiverIntelligenceTab: React.FC = () => {
           subtitle="Yamuna Catchment to Delhi"
           metric="rainfall_mm"
           value={basinRain?.accumulationMm}
-          unit="mm / 48h"
+          unit={`mm / ${rainHours}h`}
           observedAt={basinRain?.periodEnd || ''}
           quality={{ state: 'good', reasons: [], uncertainty: null }}
           provenance={{
-            sourceId: 'nasa-imerg-early',
-            origin: 'satellite_observation',
-            sourceRecordId: 'GPM-IMERG-20260912',
-            methodVersion: 'IMERG-V07-Early',
+            sourceId: basinRain?.source === 'Open-Meteo' ? 'open-meteo' : 'nasa-imerg-early',
+            origin: 'model_forecast',
+            sourceRecordId: basinRain?.id || '',
+            methodVersion: 'open-meteo-forecast-v1',
             baselineId: null,
             inputIds: [],
+            limitation: 'Grid-point precipitation, not a rain gauge at the bridge.',
           }}
-          policy={imergPolicy}
+          policy={rainPolicy}
           condition="within_range"
+          feedState={feedStateForSource(
+            basinRain?.source === 'Open-Meteo' ? 'open-meteo' : 'nasa-imerg-early',
+            rainStatus?.accessState,
+            LIVE_FEED_IDS
+          )}
           onOpenProvenance={() =>
-            openProvenance('NASA IMERG Early Gridded Rainfall', {
-              sourceId: 'nasa-imerg-early',
-              origin: 'satellite_observation',
-              methodVersion: 'IMERG-Early-0.1deg',
-              coverage: '94.2% valid catchment cells',
-              limitation: 'Delayed gridded satellite estimate; not an in-situ rain gauge at the bridge.',
+            openProvenance(basinRain?.source === 'Open-Meteo' ? 'Open-Meteo catchment rainfall' : 'Rainfall estimate', {
+              sourceId: basinRain?.source === 'Open-Meteo' ? 'open-meteo' : 'nasa-imerg-early',
+              origin: 'model_forecast',
+              location: basinRain?.locationName,
+              periodEnd: basinRain?.periodEnd,
+              limitation: 'Not an in-situ rain gauge at the bridge.',
             })
           }
         />
@@ -141,22 +160,40 @@ export const RiverIntelligenceTab: React.FC = () => {
           <div>
             <div className="samast-card-header">
               <span className="samast-card-title">Forecast Outlook</span>
-              <span className="badge badge-good">24h Horizon</span>
+              {officialFc ? (
+                <span className="badge badge-good">CWC stage</span>
+              ) : glofasFc ? (
+                <FeedStateChip state={feedStateForSource('glofas', glofasStatus?.accessState, LIVE_FEED_IDS)} />
+              ) : (
+                <span className="badge badge-warning">Outage</span>
+              )}
             </div>
             <div className="my-1.5">
               <div className="text-2xl font-bold text-slate-900 tracking-tight">
-                {activeFc ? 'Active Bulletin' : 'Outage'}
+                {officialFc
+                  ? 'CWC bulletin'
+                  : glofasFc
+                  ? `${Math.round(liveDischarge ?? 0).toLocaleString('en-IN')} m³/s`
+                  : 'No forecast'}
               </div>
               <div className="text-xs text-slate-500 mt-1">
-                {activeFc
-                  ? `Peak projection ~204.82m MSL at +15h horizon`
-                  : 'Official CWC forecast feed offline'}
+                {officialFc
+                  ? 'Official CWC stage forecast is current.'
+                  : glofasFc
+                  ? 'GloFAS modelled discharge at the Bridge 249 grid cell. Not CWC gauge stage.'
+                  : 'Official CWC forecast feed offline and GloFAS unavailable.'}
               </div>
             </div>
           </div>
           <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span className="font-mono text-[11px]">CWC Hydro Model</span>
-            <span className="text-[11px] text-slate-400">Issued 06:00 UTC</span>
+            <span className="font-mono text-[11px]">{officialFc ? 'CWC Hydro Model' : 'GloFAS / Open-Meteo'}</span>
+            <span className="text-[11px] text-slate-400">
+              {officialFc
+                ? `Issued ${officialFc.issueTime.slice(0, 16)}`
+                : glofasFc
+                ? `Issued ${glofasFc.issueTime.slice(0, 16)}`
+                : ''}
+            </span>
           </div>
         </div>
       </div>

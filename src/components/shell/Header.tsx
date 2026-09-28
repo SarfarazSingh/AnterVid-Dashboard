@@ -64,26 +64,26 @@ export const Header: React.FC = () => {
               type="button"
               className="badge badge-demo cursor-pointer max-w-[16rem] truncate"
               onClick={() => setIsScenarioSwitcherOpen(true)}
-              title={`Demo scenario: ${scenarioName}. Click to change.`}
+              title={`What-if scenario: ${scenarioName}. Live weather and satellite stay current. Click to change.`}
             >
-              <span>Demo</span>
+              <span>{currentScenario === 'normal' ? 'Live' : 'What-if'}</span>
               <span className="hidden xl:inline normal-case font-semibold truncate">· {scenarioName}</span>
             </button>
           </div>
 
           {/* Clock, Time Range & Tools */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Controlled Demo Clock */}
+            {/* Live IST clock */}
             <div
               className="hidden lg:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded px-2.5 py-1 text-xs"
-              title="Controlled operations clock fixed at 12 Sep 2026 14:35 IST for deterministic demo"
+              title="Wall-clock in Asia/Kolkata. Live public feeds are evaluated against this time."
             >
               <div className="flex flex-col text-right">
                 <span className="font-mono font-semibold text-slate-800 text-[12px]">
                   {formatToIST(demoClockIso, true)}
                 </span>
                 <span className="text-[10px] text-slate-400 font-medium">
-                  Controlled Demo Clock
+                  {isClockPaused ? 'Clock paused' : 'IST now'}
                 </span>
               </div>
               <button

@@ -245,6 +245,20 @@ export const INITIAL_SOURCE_POLICIES: Record<string, SourcePolicy> = {
     staleAfterSeconds: 21600, // 6h
     validUntilRequired: false,
   },
+  'open-meteo': {
+    sourceId: 'open-meteo',
+    expectedCadenceSeconds: 3600,
+    expectedLatencySeconds: 1800,
+    staleAfterSeconds: 7200,
+    validUntilRequired: false,
+  },
+  glofas: {
+    sourceId: 'glofas',
+    expectedCadenceSeconds: 86400,
+    expectedLatencySeconds: 21600,
+    staleAfterSeconds: 172800,
+    validUntilRequired: false,
+  },
   'cdse-sentinel-2': {
     sourceId: 'cdse-sentinel-2',
     expectedCadenceSeconds: 432000, // 5 days

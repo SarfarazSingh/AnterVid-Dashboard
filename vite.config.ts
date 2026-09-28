@@ -6,4 +6,13 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   base: './',
   plugins: [react(), tailwindcss()],
+  server: {
+    proxy: {
+      '/api/cwc': {
+        target: 'https://india-water.gov.in',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/cwc/, ''),
+      },
+    },
+  },
 })

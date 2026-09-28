@@ -38,7 +38,7 @@ export const ReportsModal: React.FC = () => {
                 <span className="badge badge-demo">Synthetic Demo Export</span>
               </div>
               <span className="text-xs text-slate-500 font-medium">
-                Asset: {asset?.name} ({asset?.id}) | Controlled Time: {formatToIST(demoClockIso)}
+                Asset: {asset?.name} ({asset?.id}) | Clock: {formatToIST(demoClockIso)}
               </span>
             </div>
           </div>

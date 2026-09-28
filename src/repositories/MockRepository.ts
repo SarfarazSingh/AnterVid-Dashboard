@@ -136,10 +136,10 @@ export class MockRepository implements Repository {
     // Idempotent acknowledgement: repeated clicks do not alter condition state or duplicate audit log
     if (ev.workflowStatus === 'unacknowledged') {
       ev.workflowStatus = 'acknowledged';
-      ev.acknowledgedAt = DEFAULT_DEMO_CLOCK_UTC;
+      ev.acknowledgedAt = new Date().toISOString();
       ev.acknowledgedBy = user;
       ev.auditTrail.push({
-        timestamp: DEFAULT_DEMO_CLOCK_UTC,
+        timestamp: new Date().toISOString(),
         user,
         action: 'Acknowledged',
         note: note || 'Operator acknowledged receipt of condition. Notice: Underlying condition remains active until rectified.',
@@ -156,7 +156,7 @@ export class MockRepository implements Repository {
     }
 
     ev.auditTrail.push({
-      timestamp: DEFAULT_DEMO_CLOCK_UTC,
+      timestamp: new Date().toISOString(),
       user,
       action: 'Operator Note Added',
       note,
@@ -178,7 +178,7 @@ export class MockRepository implements Repository {
 
     tr.reviewState = status;
     tr.reviewedBy = user;
-    tr.reviewedAt = DEFAULT_DEMO_CLOCK_UTC;
+    tr.reviewedAt = new Date().toISOString();
     tr.analystNote = note;
 
     return JSON.parse(JSON.stringify(tr));
@@ -204,7 +204,7 @@ export class MockRepository implements Repository {
       recordedBy,
       rationale,
       id: `DEC-${String(this.decisions.length + 1).padStart(4, '0')}`,
-      recordedAt: DEFAULT_DEMO_CLOCK_UTC,
+      recordedAt: new Date().toISOString(),
     };
     this.decisions.unshift(record);
     return JSON.parse(JSON.stringify(record));

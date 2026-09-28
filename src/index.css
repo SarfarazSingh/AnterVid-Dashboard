@@ -228,6 +228,22 @@
     font-weight: 700;
   }
 
+  .badge-live {
+    background-color: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .badge-fixture {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
   /* Tables */
   .samast-table-container {
     width: 100%;

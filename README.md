@@ -14,7 +14,7 @@
 
 **Samast** is an operator monitoring and diagnostic console engineered for railway bridge health, river hydrology, and surrounding ground movement. This frontend prototype is tailored for **Bridge 249** across the Yamuna River in Delhi.
 
-The system has **four primary tabs**, with Events, Reports, Data sources and Scenario simulation kept in drawers and modals:
+The system has **four primary tabs**. The clock is **live IST**. Public weather, discharge, earthquake and satellite-catalogue feeds are fetched at runtime; manufacturer sensors and barrage bulletins remain labelled fixtures.
 
 1. **Bridge sensors**: Physical instrument telemetry (3 multi-angle scour sonars, scalar triaxial vibration and dual-axis tilt, KLEON gateway power, and interactive bridge elevation schematics).
 2. **River intelligence**: Official Central Water Commission (CWC) gauge stage and discharge for Old Railway Bridge (ORB), upstream and downstream barrage release bulletins (Hathnikund, Wazirabad, ITO, Okhla), and NASA IMERG gridded rainfall.
@@ -25,7 +25,7 @@ The system has **four primary tabs**, with Events, Reports, Data sources and Sce
 
 ## 2. Analysis and decisions
 
-The rule engine in `src/utils/decisionEngine.ts` evaluates eleven factors against the controlled demo clock:
+The rule engine in `src/utils/decisionEngine.ts` evaluates eleven factors against the live IST clock:
 
 | Domain | Factors |
 |---|---|
@@ -49,27 +49,29 @@ Thresholds in `THRESHOLDS` are demonstration values. Two are anchored to public 
 
 ### Candidate data sources
 
-`src/fixtures/candidateSources.ts` lists public feeds that are not connected yet. Each is shown under **Data sources → Candidate integrations** and against the evidence gap it would close:
+`src/fixtures/candidateSources.ts` lists public feeds that are **not** connected yet. Open-Meteo, GloFAS (via Open-Meteo Flood), USGS earthquakes and the Copernicus Sentinel catalogue are already on the Connected tab.
 
-| Source | What it would add |
+| Source | Status |
 |---|---|
-| [CWC hourly water level (NWDP)](https://nwdp.nwic.gov.in/dataset/river-water-level-telemetry-hourly-central-water-commission-cwc) | Automated hourly ORB and upstream stage |
-| [Delhi I&FC Flood Control Room](https://ifc.delhi.gov.in/) | Official Delhi reports and alert/evacuation thresholds |
-| [GloFAS](https://global-flood.emergency.copernicus.eu/) | Ensemble discharge forecast when CWC is offline |
-| [Copernicus GFM](https://portal.gfm.eodc.eu/) | Sentinel-1 flood extent through cloud |
-| [Open-Meteo](https://open-meteo.com/en/docs) | Catchment rainfall forecast while IMD onboarding is pending |
-| [DPCC water quality](https://www.dpcc.delhigovt.nic.in/) | Turbidity context for degraded sonar returns |
-| [ISRO NDEM](https://ndem.nrsc.gov.in/) | Official flood inundation maps |
-| [USGS / NCS earthquakes](https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php) | Post-earthquake inspection trigger |
-| [Northern Railway](https://nr.indianrailways.gov.in/) train events | Separates train loading from structural vibration change |
+| Open-Meteo rainfall | **Live** |
+| GloFAS discharge | **Live** (not CWC stage) |
+| USGS earthquakes | **Live** |
+| Copernicus STAC Sentinel-1/2 catalogue | **Live** (metadata; not processed flood/InSAR products) |
+| [CWC hourly water level (NWDP)](https://nwdp.nwic.gov.in/dataset/river-water-level-telemetry-hourly-central-water-commission-cwc) | Probed; fixture fallback if CORS/auth blocks |
+| [Delhi I&FC](https://ifc.delhi.gov.in/) | Not connected |
+| [Copernicus GFM](https://portal.gfm.eodc.eu/) | Not connected (processed flood extent) |
+| [DPCC water quality](https://www.dpcc.delhigovt.nic.in/) | Not connected |
+| [ISRO NDEM](https://ndem.nrsc.gov.in/) | Not connected |
+| [Northern Railway](https://nr.indianrailways.gov.in/) train events | Not connected |
 
 ---
 
 ## 3. Key Architecture & Engineering Principles
 
 - **Four Primary Tabs**: `Bridge sensors`, `River intelligence`, `Ground and banks`, and `Analysis and decisions`. Utilities live in global drawers.
-- **Controlled Demo Clock**: Fixed at **12 September 2026, 14:35:00 IST (09:05:00 UTC)**. All relative ages, stale thresholds, and observation timestamps are deterministically evaluated against this reference.
-- **Repository Pattern Boundary**: UI components interact exclusively with `Repository.ts` via `MockRepository.ts` (with realistic simulated latencies and state mutation). An `HttpRepository.ts` mapping the internal Section 14.4 REST endpoints is provided for production backend integration.
+- **Live IST clock**: The header uses Asia/Kolkata wall-clock. Freshness, outlook and the decision engine evaluate against now. Pause still freezes the displayed clock.
+- **Hybrid repository**: [`HybridRepository.ts`](src/repositories/HybridRepository.ts) is the runtime default. It overlays live Open-Meteo rainfall, GloFAS discharge, USGS earthquakes and Copernicus STAC scenes on [`MockRepository.ts`](src/repositories/MockRepository.ts). Each feed fails independently onto a labelled fixture. [`HttpRepository.ts`](src/repositories/HttpRepository.ts) remains the unused Samast-backend adapter.
+- **Live vs fixture**: Cards show LIVE / FALLBACK / FIXTURE. Manufacturer sonar/vibration/tilt/KLEON and barrage bulletins are fixtures (timestamps rebased to now so they stay inspectable). CWC ORB stage is live only if a public JSON probe succeeds; otherwise it is FALLBACK. GloFAS is discharge, never converted to gauge stage.
 - **Data Semantics & Integrity**:
   - `null` represents *unavailable* data and is displayed as `"Not available"` — never falsely masked as `0`.
   - Chart gaps are explicitly preserved with discontinuous rendering — missing intervals are never interpolated.
@@ -137,7 +139,7 @@ The dashboard includes a dedicated **Scenario Switcher** (`Scenarios` button in 
 | `comms_loss_backfill` | Gateway reconnects and backfills buffered packets with true timestamps. | Heightened watch |
 | `river_warning` | ORB stage 204.68 m, above the 204.50 m warning level. | Speed restriction review |
 | `forecast_outage` | CWC forecast returns HTTP 503; forecast factor unknown. | Heightened watch |
-| `imd_auth_missing` | IMD API returns 401; rainfall falls back to NASA IMERG. | Heightened watch |
+| `imd_auth_missing` | IMD remains unauthenticated; rainfall uses live Open-Meteo when the feed succeeds. | Heightened watch |
 | `revised_barrage_release` | Hathnikund bulletin revised from 125,000 to 185,000 cusecs. | Heightened watch |
 | `cloudy_satellite_scene` | 11 Sep Sentinel-2 scene is 79.4% cloud; 6 Sep is used as latest usable. | Heightened watch |
 | `mismatched_stage_comparison` | Transect comparison dates differ by 1.85 m of river stage. | Heightened watch |
@@ -162,9 +164,16 @@ AnterVid-Dashboard/
 │   │   ├── baselineData.ts        # BR-249 assets, sensors, stations, bulletins, scenes, layers
 │   │   ├── candidateSources.ts    # Public feeds that are not connected yet
 │   │   └── scenariosData.ts       # Definitions for 15 deterministic operator scenarios
+│   ├── live/
+│   │   ├── http.ts                # fetchJson, timeouts, FeedResult
+│   │   ├── openMeteo.ts           # Rainfall + GloFAS discharge
+│   │   ├── usgsEarthquakes.ts     # Nearby earthquakes
+│   │   ├── cdseStac.ts            # Sentinel-1/2 catalogue
+│   │   └── cwcStage.ts            # Best-effort CWC JSON probe
 │   ├── repositories/
 │   │   ├── Repository.ts          # Core async repository interface
-│   │   ├── MockRepository.ts      # Deterministic in-memory repository with idempotent actions
+│   │   ├── MockRepository.ts      # Fixture sensors, scenarios, decision log
+│   │   ├── HybridRepository.ts    # Runtime default: live overlays + fixture fallback
 │   │   └── HttpRepository.ts      # Future Section 14.4 REST backend adapter
 │   ├── context/
 │   │   └── AppContext.tsx         # Global reactive store for tabs, scenarios, drawers, and selections
@@ -190,13 +199,14 @@ AnterVid-Dashboard/
 
 ## 8. Remaining Inputs for Full Hardware/Data Integration
 
-As documented in the research specification, transition from this prototype to live production requires:
-1. **Manufacturer Telemetry Feed**: Signed MQTT broker endpoint or REST export contract with live schema mappings for Samasth.
-2. **Surveyed Asset Register**: High-precision UTM 43N coordinates and mounting benchmarks for Bridge 249 piers and abutments.
-3. **Vertical Datum Benchmarks**: Official reference datum (e.g. GTS MSL) tying CWC ORB gauge elevation directly to local bed elevation.
-4. **Authorized CWC & Barrage Feeds**: Production access credentials for automated flood forecasting telemetry.
-5. **IMD API Credentials**: Authorized API key for `/api/v1/basinqpf` and automated weather stations.
-6. **Copernicus & NASA Pipelines**: Server-side processing pipelines (MintPy InSAR, DSAS transect extraction) for Sentinel and NISAR imagery.
+As documented in the research specification, remaining work for a full operational console:
+
+1. **Manufacturer Telemetry Feed**: Signed MQTT broker or REST export for live Samasth sonar/vibration (today these are labelled fixtures).
+2. **Authorized CWC JSON for ORB stage**: The app probes public India-WRIS URLs; GitHub Pages often cannot read them because of CORS.
+3. **Barrage release APIs** for Hathnikund, Wazirabad, ITO and Okhla.
+4. **IMD API credentials** if station rainfall should replace Open-Meteo.
+5. **Processed Copernicus/NASA pipelines** (MintPy, DSAS, GFM flood extent) — the STAC catalogue is live; derived bank/InSAR layers are not.
+6. **Surveyed UTM 43N pier coordinates** and a shared vertical datum.
 
 ---
 

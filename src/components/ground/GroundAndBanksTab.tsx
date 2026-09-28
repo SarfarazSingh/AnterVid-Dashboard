@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { LayerControlPanel } from './LayerControlPanel';
 import { GroundComparisonMap } from './GroundComparisonMap';
@@ -10,6 +10,7 @@ import { exportTransectsCSV } from '../../utils/exportUtils';
 
 export const GroundAndBanksTab: React.FC = () => {
   const {
+    scenes,
     transects,
     insarPoints,
     selectedTransectId,
@@ -51,7 +52,14 @@ export const GroundAndBanksTab: React.FC = () => {
     'LAYER-GSI-GEOLOGY': 0.6,
   });
 
-  const [selectedSceneId, setSelectedSceneId] = useState<string>('S2A_MSIL2A_20260906T053641');
+  const [selectedSceneId, setSelectedSceneId] = useState<string>('');
+
+  useEffect(() => {
+    if (scenes.length === 0) return;
+    if (!selectedSceneId || !scenes.some((s) => s.id === selectedSceneId)) {
+      setSelectedSceneId(scenes[0].id);
+    }
+  }, [scenes, selectedSceneId]);
 
   const toggleLayer = (id: string) => {
     setLayerVisibility((prev) => ({ ...prev, [id]: !prev[id] }));

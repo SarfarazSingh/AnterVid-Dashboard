@@ -60,7 +60,7 @@ describe('Analysis and decision rules', () => {
     expect(byId.stage.level).toBe('watch');
     expect(byId.forecast.level).toBe('watch');
     expect(byId.release.level).toBe('watch');
-    expect(a.confidence).toBe('medium');
+    expect(a.confidence).toBe('high');
   });
 
   it('Scour escalation from the rule engine event raises a speed restriction review', async () => {
@@ -90,7 +90,7 @@ describe('Analysis and decision rules', () => {
     const a = await assessScenario(repo, 'forecast_outage');
     expect(a.factors.find((f) => f.id === 'forecast')?.level).toBe('unknown');
     const gap = a.gaps.find((g) => g.id === 'gap-forecast');
-    expect(gap?.candidateSourceIds).toEqual(['cwc-nwdp', 'glofas']);
+    expect(gap?.candidateSourceIds).toEqual(['cwc-nwdp']);
   });
 
   it('Stage above the danger level recommends a traffic suspension review', async () => {

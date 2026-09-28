@@ -52,7 +52,7 @@ export const ScenarioSwitcherModal: React.FC = () => {
                 <span className="badge badge-demo">Demo Tooling</span>
               </div>
               <span className="text-xs text-slate-500 font-medium">
-                Test UI state machine, edge cases, degraded feeds, and procedural alerts deterministically
+                Test degraded sensors, river warning, and outages. Live rainfall, GloFAS, USGS and Sentinel catalogue stay current.
               </span>
             </div>
           </div>

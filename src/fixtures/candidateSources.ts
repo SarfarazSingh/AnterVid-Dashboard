@@ -1,9 +1,8 @@
 import { CandidateSource } from '../types/domain';
 
 /**
- * Real, publicly documented feeds that are not yet connected to Samast.
- * Nothing here produces dashboard values; each entry describes what the feed
- * would add and which decision factor it would strengthen.
+ * Public feeds that are not yet connected. Live Open-Meteo, GloFAS, USGS and
+ * the Copernicus STAC catalogue are wired in HybridRepository instead.
  */
 export const CANDIDATE_SOURCES: CandidateSource[] = [
   {
@@ -11,7 +10,7 @@ export const CANDIDATE_SOURCES: CandidateSource[] = [
     name: 'CWC hourly river water level (National Water Data Portal)',
     provider: 'Central Water Commission / NWIC',
     category: 'hydrology',
-    adds: 'Automated hourly stage for Old Railway Bridge and upstream CWC gauges, replacing manual bulletin entry.',
+    adds: 'Automated hourly stage for Old Railway Bridge. The dashboard tries a public JSON probe and falls back to a labelled fixture when CORS or auth blocks it.',
     decisionUse: 'ORB stage factor, stage trend, forecast checks',
     access: 'Open, no key',
     cadence: 'Hourly',
@@ -31,39 +30,15 @@ export const CANDIDATE_SOURCES: CandidateSource[] = [
     status: 'not_connected',
   },
   {
-    id: 'glofas',
-    name: 'GloFAS ensemble river discharge forecast',
-    provider: 'Copernicus Emergency Management Service (ECMWF)',
-    category: 'hydrology',
-    adds: 'Up to 30-day ensemble discharge outlook. Shown today from a static fixture only.',
-    decisionUse: 'Model context when the CWC forecast is unavailable',
-    access: 'Free account',
-    cadence: 'Daily',
-    url: 'https://global-flood.emergency.copernicus.eu/',
-    status: 'fixture_only',
-  },
-  {
     id: 'copernicus-gfm',
     name: 'Copernicus Global Flood Monitoring (GFM) observed flood extent',
     provider: 'Copernicus Emergency Management Service / EODC',
     category: 'satellite',
-    adds: 'Automated Sentinel-1 flood extent around the approaches, independent of cloud cover.',
+    adds: 'Automated Sentinel-1 flood extent around the approaches, independent of cloud cover. Catalogue search is live; this processed flood product is not.',
     decisionUse: 'Ground and banks evidence when optical scenes are cloud-obscured',
     access: 'Free account',
     cadence: 'Every Sentinel-1 pass',
     url: 'https://portal.gfm.eodc.eu/',
-    status: 'not_connected',
-  },
-  {
-    id: 'open-meteo',
-    name: 'Open-Meteo catchment precipitation forecast',
-    provider: 'Open-Meteo (ECMWF, GFS and ICON models)',
-    category: 'weather',
-    adds: 'Hourly 7-day rainfall forecast for Yamunanagar, Paonta Sahib and Delhi grid points.',
-    decisionUse: 'Rainfall outlook while IMD API onboarding is pending',
-    access: 'Open, no key',
-    cadence: 'Hourly',
-    url: 'https://open-meteo.com/en/docs',
     status: 'not_connected',
   },
   {
@@ -88,18 +63,6 @@ export const CANDIDATE_SOURCES: CandidateSource[] = [
     access: 'Published bulletins',
     cadence: 'Event-driven',
     url: 'https://ndem.nrsc.gov.in/',
-    status: 'not_connected',
-  },
-  {
-    id: 'seismic',
-    name: 'Earthquake feeds (NCS India and USGS)',
-    provider: 'National Center for Seismology / U.S. Geological Survey',
-    category: 'hazard',
-    adds: 'Magnitude and distance of earthquakes near Delhi (seismic zone IV).',
-    decisionUse: 'Triggers a post-earthquake inspection check',
-    access: 'Open, no key',
-    cadence: 'Minutes',
-    url: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php',
     status: 'not_connected',
   },
   {

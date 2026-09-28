@@ -198,7 +198,7 @@ export interface RainfallData {
   id: string;
   locationType: 'local_delhi' | 'upstream_basin' | 'subbasin_yamunanagar';
   locationName: string;
-  source: 'IMD AWS' | 'NASA IMERG Early' | 'IMD District Warning';
+  source: 'IMD AWS' | 'NASA IMERG Early' | 'IMD District Warning' | 'Open-Meteo';
   periodStart: string;
   periodEnd: string;
   accumulationMm: number;
@@ -320,7 +320,7 @@ export interface Event {
 export interface SourceStatus {
   sourceId: string;
   name: string;
-  category: 'manufacturer' | 'hydrology' | 'weather' | 'satellite' | 'thematic';
+  category: 'manufacturer' | 'hydrology' | 'weather' | 'satellite' | 'thematic' | 'hazard';
   accessState: 'current' | 'stale' | 'authentication_required' | 'rate_limited' | 'temporarily_unavailable' | 'not_configured';
   lastAttemptAt: string;
   lastSuccessfulFetchAt: string | null;

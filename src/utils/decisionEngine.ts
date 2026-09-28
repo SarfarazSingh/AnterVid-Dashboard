@@ -570,7 +570,7 @@ function telemetryFactor(input: AssessmentInput): DecisionFactor {
 }
 
 function externalFeedsFactor(input: AssessmentInput): DecisionFactor {
-  const watched = ['cwc-official', 'barrage-bulletin', 'imd-aws', 'nasa-imerg-early'];
+  const watched = ['cwc-official', 'open-meteo', 'glofas'];
   const statuses = input.sourceStatuses.filter((s) => watched.includes(s.sourceId));
   const degraded = statuses.filter((s) => s.accessState !== 'current');
   return {
@@ -579,10 +579,10 @@ function externalFeedsFactor(input: AssessmentInput): DecisionFactor {
     label: 'River and weather feeds',
     level: degraded.length === 0 ? 'normal' : 'watch',
     value: `${statuses.length - degraded.length} of ${statuses.length} current`,
-    threshold: 'All official river and weather feeds current',
+    threshold: 'Live CWC (if available), Open-Meteo and GloFAS current',
     rationale:
       degraded.length === 0
-        ? 'CWC, barrage bulletins, IMD and IMERG are all current.'
+        ? 'Open-Meteo, GloFAS and CWC are all current.'
         : degraded.map((s) => `${s.name}: ${s.accessState.replace(/_/g, ' ')}.`).join(' '),
     source: 'Data source registry',
     observedAt: null,
@@ -896,20 +896,20 @@ function buildGaps(input: AssessmentInput, f: Record<string, DecisionFactor>): D
   const gaps: DataGap[] = [];
   const status = (id: string) => input.sourceStatuses.find((s) => s.sourceId === id);
 
-  if (status('imd-aws')?.accessState === 'authentication_required') {
+  if (status('imd-aws')?.accessState === 'authentication_required' && status('open-meteo')?.accessState !== 'current') {
     gaps.push({
       id: 'gap-imd',
       label: 'No station rainfall or nowcast',
-      impact: 'Catchment rainfall relies on a satellite estimate with about 4 hours of latency.',
-      candidateSourceIds: ['open-meteo'],
+      impact: 'Catchment rainfall has neither an IMD station feed nor a live Open-Meteo response.',
+      candidateSourceIds: ['cwc-nwdp'],
     });
   }
   if (f.forecast.level === 'unknown') {
     gaps.push({
       id: 'gap-forecast',
       label: 'Official stage forecast offline',
-      impact: 'The outlook has no official peak or warning-level crossing time.',
-      candidateSourceIds: ['cwc-nwdp', 'glofas'],
+      impact: 'The outlook has no official CWC peak or warning-level crossing time. GloFAS discharge is model context only.',
+      candidateSourceIds: ['cwc-nwdp'],
     });
   }
   if (f.scour.level === 'unknown') {
@@ -961,12 +961,14 @@ function buildGaps(input: AssessmentInput, f: Record<string, DecisionFactor>): D
     impact: 'Vibration peaks cannot be separated from ordinary train loading.',
     candidateSourceIds: ['nr-train-events'],
   });
-  gaps.push({
-    id: 'gap-seismic',
-    label: 'No earthquake trigger',
-    impact: 'A nearby earthquake would not prompt a post-event inspection check.',
-    candidateSourceIds: ['seismic'],
-  });
+  if (!input.events.some((e) => e.id.startsWith('EVT-USGS-'))) {
+    gaps.push({
+      id: 'gap-seismic',
+      label: 'No earthquake in the last 7 days within 300 km',
+      impact: 'USGS is queried live; this gap means none met the radius filter, not that the feed is missing.',
+      candidateSourceIds: [],
+    });
+  }
   return gaps;
 }
 

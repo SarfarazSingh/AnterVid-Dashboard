@@ -177,8 +177,7 @@ export const DataSourcesModal: React.FC = () => {
           ) : (
             <>
               <p className="text-xs text-slate-600">
-                These public feeds are not connected. Each would strengthen a factor in the Analysis and decisions tab.
-                Connections run through the server adapter, so no credentials reach the browser.
+                Public feeds that are not connected yet. Open-Meteo, GloFAS, USGS and the Copernicus scene catalogue are on the Connected tab.
               </p>
               <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {CANDIDATE_SOURCES.map((s) => (
@@ -216,7 +215,7 @@ export const DataSourcesModal: React.FC = () => {
 
         {/* Footer */}
         <div className="p-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-3 text-xs text-slate-500">
-          <span>Server adapter polling. Browser credentials are never used.</span>
+          <span>Live Open-Meteo, GloFAS, USGS and Copernicus STAC are fetched in the browser. No API keys are stored here. Manufacturer sensors and barrage bulletins remain fixtures.</span>
           <button type="button" className="btn btn-secondary btn-sm" onClick={close}>
             Close
           </button>

@@ -15,7 +15,7 @@ import { ProvenanceDrawer } from './components/shared/ProvenanceDrawer';
 import { AlertCircle } from 'lucide-react';
 
 const MainContent: React.FC = () => {
-  const { activeTab, provenanceTarget, closeProvenance, isLoading, isRefreshing, error } = useApp();
+  const { activeTab, provenanceTarget, closeProvenance, isLoading, isRefreshing, error, currentScenario } = useApp();
 
   if (isLoading) {
     return (
@@ -47,6 +47,14 @@ const MainContent: React.FC = () => {
       {/* Primary Analytical Tabs Navigation */}
       <NavigationTabs />
 
+      {currentScenario !== 'normal' && (
+        <div className="bg-amber-50 border-b border-amber-200 text-amber-950 text-xs">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+            What-if scenario is on. Sensor, barrage and CWC-stage fixtures follow the scenario; live rainfall, GloFAS, USGS and Sentinel catalogue stay current.
+          </div>
+        </div>
+      )}
+
       <div className="h-0.5 relative overflow-hidden" aria-hidden={!isRefreshing}>
         {isRefreshing && <div className="absolute inset-0 bg-blue-500 animate-pulse" />}
       </div>
@@ -76,9 +84,9 @@ const MainContent: React.FC = () => {
             <span>AnterVid Bridge Health Monitoring Specification (Bridge 249, Yamuna, Delhi)</span>
           </div>
           <div className="flex items-center gap-3 text-slate-400">
-            <span>Synthetic Demonstration Environment</span>
+            <span>Live public feeds · fixture sensors and barrage bulletins</span>
             <span>•</span>
-            <span>Version 1.0-monsoon26</span>
+            <span>Version 1.1-live</span>
           </div>
         </div>
       </footer>

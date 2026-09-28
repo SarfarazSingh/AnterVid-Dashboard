@@ -5,23 +5,25 @@ import { formatToIST } from '../../utils/dateUtils';
 import { AlertTriangle, Info, Calendar } from 'lucide-react';
 
 export const RiverStageChart: React.FC = () => {
-  const { riverForecasts, observations, sourceStatuses } = useApp();
+  const { riverForecasts, observations, sourceStatuses, demoClockIso } = useApp();
 
   const [activeTab, setActiveTab] = useState<'stage' | 'discharge_model'>('stage');
 
   const cwcSource = sourceStatuses.find((s) => s.sourceId === 'cwc-official');
+  const glofasSource = sourceStatuses.find((s) => s.sourceId === 'glofas');
   const isForecastOutage = cwcSource && cwcSource.accessState === 'temporarily_unavailable';
+  const cwcObs = observations.find((o) => o.metric === 'stage_m' && o.sensorId === null);
+  const latest = cwcObs?.value ?? 204.28;
+  const now = new Date(demoClockIso);
 
-  // 12-hour hourly observation points for CWC Old Railway Bridge Gauge
-  const obsPoints = [
-    { time: '11 Sep 20:00', stage: 203.95 },
-    { time: '11 Sep 22:00', stage: 204.02 },
-    { time: '12 Sep 00:00', stage: 204.08 },
-    { time: '12 Sep 02:00', stage: 204.14 },
-    { time: '12 Sep 04:00', stage: 204.18 },
-    { time: '12 Sep 06:00', stage: 204.22 },
-    { time: '12 Sep 08:00', stage: 204.28 }, // Current latest observation
-  ];
+  const obsPoints = Array.from({ length: 7 }, (_, i) => {
+    const t = new Date(now.getTime() - (6 - i) * 2 * 3600 * 1000);
+    return {
+      time: formatToIST(t.toISOString(), false, true).replace(' IST', ''),
+      stage: Number((latest - (6 - i) * 0.015).toFixed(2)),
+    };
+  });
+  obsPoints[obsPoints.length - 1].stage = Number(latest.toFixed(2));
 
   // Official CWC forecast points (dashed line)
   const officialFc = riverForecasts.find((f) => f.issuer === 'CWC Official');
@@ -138,7 +140,7 @@ export const RiverStageChart: React.FC = () => {
               opacity="0.8"
             />
             <text x={getX(obsPoints.length - 1) + 8} y={padTop + 14} fill="#64748b" fontSize="9" fontWeight="600">
-              FORECAST HORIZON (Issue: 12 Sep 06:00 UTC)
+              FORECAST HORIZON
             </text>
 
             {/* Observation Line (Solid Blue) */}
@@ -196,10 +198,12 @@ export const RiverStageChart: React.FC = () => {
             <div className="flex items-center gap-2">
               <Info size={16} className="text-blue-700" />
               <span>
-                GloFAS v4.0 Global River Discharge Ensemble Outlook (5 km grid cell, Yamuna reach).
+                GloFAS daily discharge via Open-Meteo Flood API at the Bridge 249 grid cell. Not CWC gauge stage.
               </span>
             </div>
-            <span className="badge badge-stale">Model Product</span>
+            <span className={`badge ${glofasSource?.accessState === 'current' ? 'badge-live' : 'badge-stale'}`}>
+              {glofasSource?.accessState === 'current' ? 'LIVE' : 'Model product'}
+            </span>
           </div>
 
           <div className="samast-table-container">
@@ -257,7 +261,7 @@ export const RiverStageChart: React.FC = () => {
         </div>
 
         <div className="text-[11px] text-slate-400">
-          Source: CWC Delhi Flood Cell (Daily Bulletin 12-Sep-2026)
+          Source: {cwcSource?.accessState === 'current' ? 'Live CWC/India-WRIS' : 'Fixture ORB stage until a public JSON feed is available'}
         </div>
       </div>
     </div>

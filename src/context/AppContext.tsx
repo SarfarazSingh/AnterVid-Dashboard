@@ -19,8 +19,7 @@ import {
   DecisionRecordInput,
 } from '../types/domain';
 import { Repository } from '../repositories/Repository';
-import { MockRepository } from '../repositories/MockRepository';
-import { DEFAULT_DEMO_CLOCK_UTC } from '../utils/dateUtils';
+import { HybridRepository } from '../repositories/HybridRepository';
 import { Assessment, assessBridge } from '../utils/decisionEngine';
 
 export type PrimaryTab = 'bridge_sensors' | 'river_intelligence' | 'ground_and_banks' | 'analysis_decisions';
@@ -92,7 +91,7 @@ interface AppContextType {
   refreshData: () => Promise<void>;
 }
 
-const defaultRepo = new MockRepository();
+const defaultRepo = new HybridRepository();
 const AppContext = createContext<AppContextType | null>(null);
 
 export const AppProvider: React.FC<{ children: React.ReactNode; repo?: Repository }> = ({
@@ -105,7 +104,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; repo?: Repositor
   const [selectedPierId, setSelectedPierId] = useState<string | null>('P11');
   const [selectedSensorId, setSelectedSensorId] = useState<string | null>('P11-SON-01');
   const [selectedTimeRange, setTimeRange] = useState<TimeRangeOption>('24h');
-  const [demoClockIso] = useState<string>(DEFAULT_DEMO_CLOCK_UTC);
+  const [demoClockIso, setDemoClockIso] = useState<string>(() => new Date().toISOString());
   const [isClockPaused, setIsClockPaused] = useState<boolean>(false);
 
   // Data states
@@ -143,7 +142,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; repo?: Repositor
   const [selectedTransectId, setSelectedTransectId] = useState<string | null>('FIND-TR-01');
   const [selectedInSARPointId, setSelectedInSARPointId] = useState<string | null>('INSAR-PT-01');
 
-  const loadAllData = useCallback(async () => {
+  const loadAllData = useCallback(async (opts?: { forceLive?: boolean }) => {
     // Only the first load blanks the workspace; later refreshes keep the current view on screen.
     const isInitial = !hasLoadedOnce.current;
     try {
@@ -153,6 +152,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode; repo?: Repositor
         setIsRefreshing(true);
       }
       setError(null);
+      if (opts?.forceLive && 'invalidateLive' in repository) {
+        (repository as HybridRepository).invalidateLive();
+      }
 
       const [
         loadedAsset,
@@ -253,6 +255,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode; repo?: Repositor
     loadAllData();
   }, [loadAllData]);
 
+  useEffect(() => {
+    if (isClockPaused) return;
+    const id = window.setInterval(() => {
+      setDemoClockIso(new Date().toISOString());
+    }, 60_000);
+    return () => window.clearInterval(id);
+  }, [isClockPaused]);
+
   const selectPier = useCallback(
     (pierId: string | null) => {
       setSelectedPierId(pierId);
@@ -338,7 +348,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode; repo?: Repositor
   }, []);
 
   const toggleClockPause = useCallback(() => {
-    setIsClockPaused((prev) => !prev);
+    setIsClockPaused((prev) => {
+      if (prev) setDemoClockIso(new Date().toISOString());
+      return !prev;
+    });
   }, []);
 
   return (
@@ -403,7 +416,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; repo?: Repositor
         setSelectedTransectId,
         setSelectedInSARPointId,
         toggleClockPause,
-        refreshData: loadAllData,
+        refreshData: () => loadAllData({ forceLive: true }),
       }}
     >
       {children}

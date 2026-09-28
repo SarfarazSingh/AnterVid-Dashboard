@@ -11,7 +11,7 @@ export const RainfallPanel: React.FC = () => {
   >('upstream_basin');
 
   const imdStatus = sourceStatuses.find((s) => s.sourceId === 'imd-aws');
-  const imergStatus = sourceStatuses.find((s) => s.sourceId === 'nasa-imerg-early');
+  const openMeteoStatus = sourceStatuses.find((s) => s.sourceId === 'open-meteo');
 
   const activeRainfall = rainfall.find((r) => r.locationType === selectedLocation);
 
@@ -81,7 +81,7 @@ export const RainfallPanel: React.FC = () => {
             </div>
             <div className="mt-3 text-xs text-slate-500 flex items-center gap-1.5">
               <CloudRain size={14} className="text-blue-600" />
-              <span>Accumulation: 48h Period Depth</span>
+              <span>Accumulation: {selectedLocation === 'upstream_basin' ? '48h' : '24h'} period depth</span>
             </div>
           </div>
 
@@ -123,7 +123,7 @@ export const RainfallPanel: React.FC = () => {
             {activeRainfall.warningCategory && (
               <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-1 rounded bg-emerald-100 text-emerald-800 font-semibold border border-emerald-300">
                 <ShieldCheck size={13} />
-                <span>IMD Warning: {activeRainfall.warningCategory}</span>
+                <span>IMD Warning class (from 24h depth): {activeRainfall.warningCategory}</span>
               </div>
             )}
           </div>
@@ -136,10 +136,12 @@ export const RainfallPanel: React.FC = () => {
           <div className="flex items-center gap-2">
             <AlertTriangle size={15} className="text-amber-600 flex-shrink-0" />
             <span>
-              IMD API Gateway unauthenticated (HTTP 401). Gridded rainfall estimates provided by NASA GPM IMERG Early (0.1° grid, ~4h nominal latency).
+              IMD API is not onboarded. Catchment rainfall is {openMeteoStatus?.accessState === 'current' ? 'live Open-Meteo (no key)' : 'the fixture snapshot because Open-Meteo did not respond'}.
             </span>
           </div>
-          <span className="badge badge-watch">IMERG Early Fallback</span>
+          <span className={`badge ${openMeteoStatus?.accessState === 'current' ? 'badge-live' : 'badge-watch'}`}>
+            {openMeteoStatus?.accessState === 'current' ? 'Open-Meteo LIVE' : 'Rainfall fallback'}
+          </span>
         </div>
       )}
     </div>
