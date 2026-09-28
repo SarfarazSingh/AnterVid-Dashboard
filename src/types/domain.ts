@@ -99,7 +99,7 @@ export interface Sensor {
   assetId: string;
   pierId: string;
   name: string;
-  deviceType: 'sonar' | 'vibration_tilt' | 'cabinet_temp' | 'telltale_displacement';
+  deviceType: 'sonar' | 'vibration_tilt' | 'telemetry_gateway' | 'cabinet_temp' | 'telltale_displacement';
   channels: string[];
   units: Record<string, string>;
   mountReference: ReferenceMount;

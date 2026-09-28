@@ -166,17 +166,11 @@ export const BridgeSchematic: React.FC = () => {
             {/* Water Body (Yamuna River) */}
             <rect x="45" y={waterY} width="830" height={215 - waterY} fill="url(#waterGradient)" />
 
-            {/* High Water Danger Line (205.33m RL) */}
+            {/* High Water Danger Line (205.33m RL) — labels are drawn after the piers */}
             <line x1="45" y1="105" x2="875" y2="105" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="5,4" />
-            <text x="80" y="100" fill="#b91c1c" fontSize="9.5" fontWeight="700">
-              Danger level {DANGER_LEVEL_M.toFixed(2)} m MSL
-            </text>
 
             {/* Current River Surface Water Line */}
             <line x1="45" y1={waterY} x2="875" y2={waterY} stroke="#2563eb" strokeWidth="2.5" />
-            <text x="835" y={waterY + 13} fill="#1e3a8a" fontSize="9.5" fontWeight="700" textAnchor="end">
-              {stage === null ? 'Stage not available' : `ORB stage ${stage.toFixed(2)} m`}
-            </text>
 
             {/* Riverbed / Alluvial Subsurface Profile */}
             <path
@@ -186,15 +180,8 @@ export const BridgeSchematic: React.FC = () => {
               strokeWidth="1.5"
             />
 
-            {/* Scour Depression Zone under P11 */}
+            {/* Scour Depression Zone under P11 — label is drawn after the piers */}
             <ellipse cx={p11X + 5} cy="234" rx="40" ry="14" fill="url(#scourGlow)" />
-            <text x={p11X - 38} y="200" fill="#991b1b" fontSize="9" fontWeight="700" textAnchor="end">
-              {s2Drop === null
-                ? 'Bed condition unknown'
-                : isP11ScourAlert
-                ? `Bed lowering ${s2Drop.toFixed(2)} m`
-                : 'Bed within baseline'}
-            </text>
 
             {/* Bridge Steel Girder Superstructure */}
             <rect x="35" y="55" width="850" height="16" fill="#1e293b" rx="2" />
@@ -311,6 +298,30 @@ export const BridgeSchematic: React.FC = () => {
             >
               <polygon points="855,71 885,71 895,235 845,235" fill={selectedPierId === 'A2' ? '#bfdbfe' : '#94a3b8'} stroke="#334155" strokeWidth="1.5" />
               <text x="860" y="250" fill="#334155" fontSize="8.5" fontWeight="600">A2 (East)</text>
+            </g>
+
+            {/* Water-level and bed labels, drawn last so piers do not cover them */}
+            <g
+              fontSize="9.5"
+              fontWeight="700"
+              stroke="white"
+              strokeWidth="3"
+              paintOrder="stroke"
+              style={{ paintOrder: 'stroke' }}
+            >
+              <text x="80" y="100" fill="#b91c1c">
+                Danger level {DANGER_LEVEL_M.toFixed(2)} m MSL
+              </text>
+              <text x="835" y={waterY + 13} fill="#1e3a8a" textAnchor="end">
+                {stage === null ? 'Stage not available' : `ORB stage ${stage.toFixed(2)} m`}
+              </text>
+              <text x={p11X - 38} y="200" fill="#991b1b" textAnchor="end" fontSize="9">
+                {s2Drop === null
+                  ? 'Bed condition unknown'
+                  : isP11ScourAlert
+                  ? `Bed lowering ${s2Drop.toFixed(2)} m`
+                  : 'Bed within baseline'}
+              </text>
             </g>
           </svg>
         </div>

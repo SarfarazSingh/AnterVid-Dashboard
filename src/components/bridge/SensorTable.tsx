@@ -105,14 +105,14 @@ export const SensorTable: React.FC = () => {
                           sensor.capabilities.isCommissioned ? 'bg-emerald-500' : 'bg-amber-400'
                         }`}
                       />
-                      <span>{sensor.id}</span>
+                      <span className="whitespace-nowrap">{sensor.id}</span>
                     </div>
                   </td>
                   <td className="font-medium text-slate-700">
                     {sensor.pierId} ({sensor.name.split('(')[0].trim()})
                   </td>
                   <td className="text-slate-600 capitalize">
-                    {sensor.deviceType.replace('_', ' ')}
+                    {sensor.deviceType.replace(/_/g, ' ')}
                   </td>
                   <td className="font-mono text-xs text-slate-600">
                     {primaryMetric}
@@ -147,7 +147,7 @@ export const SensorTable: React.FC = () => {
                     {ageSec !== null ? formatAgeString(ageSec) : 'N/A'}
                   </td>
                   <td className="font-mono text-xs text-slate-500">
-                    {sensor.baselineVersion}
+                    <span className="whitespace-nowrap">{sensor.baselineVersion}</span>
                   </td>
                   <td>
                     <span

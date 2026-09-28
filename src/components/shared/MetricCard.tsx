@@ -81,14 +81,12 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       }}
     >
       {/* Top Header */}
-      <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100">
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-600">
-            {title}
-          </span>
-          {subtitle && <span className="text-[11px] text-slate-400">({subtitle})</span>}
+      <div className="flex items-start justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100">
+        <div className="min-w-0">
+          <div className="text-xs font-semibold uppercase tracking-wider text-slate-600 leading-snug">{title}</div>
+          {subtitle && <div className="text-[11px] text-slate-400 leading-snug mt-0.5">{subtitle}</div>}
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0">
           <QualityBadge quality={quality.state} reasons={quality.reasons} />
           {onOpenProvenance && (
             <button

@@ -181,7 +181,7 @@ export const INITIAL_SENSORS: Sensor[] = [
     assetId: 'BR-249',
     pierId: 'P11',
     name: 'KLEON Telemetry Gateway & Solar Power',
-    deviceType: 'vibration_tilt', // telemetry system
+    deviceType: 'telemetry_gateway',
     channels: ['battery_voltage', 'solar_current', 'cabinet_temp', 'signal_rssi'],
     units: {
       battery_voltage: 'V',
