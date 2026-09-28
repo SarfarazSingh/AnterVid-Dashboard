@@ -17,7 +17,7 @@
 The system is architected around **three primary analytical tabs**, keeping auxiliary functions (Events, Reports, Data sources, and Scenario simulation) in dedicated operator drawers and modals:
 
 1. **Bridge sensors**: Physical instrument telemetry (3 multi-angle scour sonars, scalar triaxial vibration and dual-axis tilt, KLEON gateway power, and interactive bridge elevation schematics).
-2. **River intelligence**: Official Central Water Commission (CWC) gauge stages and forecasts for Old Railway Bridge (ORB), independent local river radar, upstream barrage release bulletins (Hathnikund, Wazirabad, Okhla), and NASA IMERG gridded rainfall.
+2. **River intelligence**: Official Central Water Commission (CWC) gauge stage and discharge for Old Railway Bridge (ORB), upstream and downstream barrage release bulletins (Hathnikund, Wazirabad, ITO, Okhla), and NASA IMERG gridded rainfall.
 3. **Ground and banks**: Multi-temporal satellite change analysis (Sentinel-2 L2A optical, Sentinel-1 radar backscatter, NISAR provisional L-band interferometry), interactive vector swipe map, surveyed transects with analyst review workflows, and line-of-sight (LOS) deformation monitoring.
 
 ---
@@ -79,7 +79,7 @@ npm run build
 
 ---
 
-## 5. 16 Deterministic Operator Scenarios
+## 5. 15 Deterministic Operator Scenarios
 
 The dashboard includes a dedicated **Scenario Switcher** (`Scenarios` button in header) to demonstrate edge cases and degraded states:
 
@@ -90,7 +90,6 @@ The dashboard includes a dedicated **Scenario Switcher** (`Scenarios` button in 
 | `degraded_sonar` | Degraded Acoustic Return | Sonar 01 reports weak acoustic return without claiming turbidity cause. |
 | `all_sonar_unavailable` | All Sonar Unavailable | Power brownout on acoustic array; values null with retained last valid history. |
 | `scalar_vibration_only` | Scalar-Only Vibration Device | Gated waveform/modal views with explanatory capability badges. |
-| `optional_uncommissioned` | River Radar Uncommissioned | Local river radar pending field commissioning. |
 | `stale_telemetry` | Stale Sensor Telemetry | Telemetry gateway delay > 45 minutes; displays stale age badge. |
 | `comms_loss_backfill` | Communications Loss & Backfill | Network disconnect followed by timestamped packet backfilling. |
 | `river_warning` | Official River Warning Context | CWC ORB stage rises to 204.62 m exceeding Warning Level (204.50 m). |
@@ -146,7 +145,7 @@ AnterVid-Dashboard/
 
 As documented in the research specification, transition from this prototype to live production requires:
 1. **Manufacturer Telemetry Feed**: Signed MQTT broker endpoint or REST export contract with live schema mappings for Samasth.
-2. **Surveyed Asset Register**: High-precision UTM 43N coordinates and mounting benchmarks for Bridge 249 piers, abutments, and local river radar.
+2. **Surveyed Asset Register**: High-precision UTM 43N coordinates and mounting benchmarks for Bridge 249 piers and abutments.
 3. **Vertical Datum Benchmarks**: Official reference datum (e.g. GTS MSL) tying CWC ORB gauge elevation directly to local bed elevation.
 4. **Authorized CWC & Barrage Feeds**: Production access credentials for automated flood forecasting telemetry.
 5. **IMD API Credentials**: Authorized API key for `/api/v1/basinqpf` and automated weather stations.

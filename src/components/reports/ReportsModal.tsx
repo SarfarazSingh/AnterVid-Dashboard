@@ -108,7 +108,7 @@ export const ReportsModal: React.FC = () => {
                   Daily Bridge Sensor Telemetry Report
                 </div>
                 <p className="text-slate-600 leading-relaxed">
-                  Generates an RFC 4180 compliant CSV file containing all commissioned channels (acoustic sonar ranges, cap vibration peak/RMS, bi-axial inclinometer tilt, KLEON gateway power telemetry, and local radar stage).
+                  Generates an RFC 4180 compliant CSV file containing all commissioned channels (acoustic sonar ranges, cap vibration peak/RMS, bi-axial inclinometer tilt, and KLEON gateway power telemetry).
                 </p>
                 <div className="pt-2 flex items-center gap-3">
                   <button

@@ -37,13 +37,6 @@ export const ALL_SCENARIOS: DemoScenario[] = [
     expectedVisibleBehavior: 'Vibration card displays 0.046 m/s² peak. Inspector explicitly declares "Raw waveform, FFT spectra, and modal decomposition are gated in this hardware manifest".',
   },
   {
-    id: 'optional_sensors_uncommissioned',
-    name: '6. River Radar Uncommissioned',
-    category: 'Bridge Sensors',
-    shortDescription: 'Local river radar pending field commissioning.',
-    expectedVisibleBehavior: 'River radar shows "Planned / Not Commissioned" and is omitted from the commissioned channel count.',
-  },
-  {
     id: 'stale_telemetry',
     name: '7. Stale Telemetry (Comms Lag > 45m)',
     category: 'Sources & Comms',

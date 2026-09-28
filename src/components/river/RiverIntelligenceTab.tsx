@@ -9,16 +9,18 @@ import { INITIAL_SOURCE_POLICIES } from '../../fixtures/baselineData';
 import { Waves, CloudRain, Radio, Compass } from 'lucide-react';
 
 export const RiverIntelligenceTab: React.FC = () => {
-  const { observations, riverForecasts, rainfall, sourceStatuses, openProvenance } = useApp();
+  const { observations, riverForecasts, rainfall, releaseBulletins, openProvenance } = useApp();
 
   const cwcPolicy = INITIAL_SOURCE_POLICIES['cwc-official'];
-  const samasthPolicy = INITIAL_SOURCE_POLICIES['samasth-gateway'];
+  const barragePolicy = INITIAL_SOURCE_POLICIES['barrage-bulletin'];
   const imergPolicy = INITIAL_SOURCE_POLICIES['nasa-imerg-early'];
 
   // CWC observation (ORB gauge)
   const cwcObs = observations.find((o) => o.metric === 'stage_m' && o.sensorId === null);
-  // Local radar observation
-  const radarObs = observations.find((o) => o.sensorId === 'RADAR-BR249-01');
+  const cwcDischarge = observations.find((o) => o.id === 'OBS-CWC-ORB-Q');
+  const wazirabad = releaseBulletins.find(
+    (b) => b.barrageId === 'STA-WAZIRABAD' && !b.isSuperseded,
+  );
 
   // Upper basin rainfall
   const basinRain = rainfall.find((r) => r.locationType === 'upstream_basin');
@@ -49,22 +51,59 @@ export const RiverIntelligenceTab: React.FC = () => {
             delta: cwcObs?.value ? cwcObs.value - 204.50 : 0,
             unit: 'm',
           }}
+          companion={
+            cwcDischarge && cwcDischarge.value !== null
+              ? {
+                  label: 'CWC daily discharge',
+                  value: `${Math.round(cwcDischarge.value).toLocaleString('en-IN')} cusecs`,
+                }
+              : undefined
+          }
           onOpenProvenance={cwcObs ? () => openProvenance('Official CWC River Gauge (ORB)', cwcObs) : undefined}
         />
 
-        {/* Card 2: Local River Radar (Bridge 249) */}
+        {/* Card 2: Nearest upstream official release */}
         <MetricCard
-          title="Local River Radar"
-          subtitle="Bridge 249 Span 11 (Independent from CWC)"
-          metric="distance_to_water"
-          value={radarObs?.value}
-          unit="m"
-          observedAt={radarObs?.observedAt || ''}
-          quality={radarObs?.quality || { state: 'good', reasons: [], uncertainty: null }}
-          provenance={radarObs?.provenance || { sourceId: 'samasth-gateway', origin: 'manufacturer_sensor', sourceRecordId: '', methodVersion: null, baselineId: null, inputIds: [] }}
-          policy={samasthPolicy}
+          title="Wazirabad Release"
+          subtitle="Nearest upstream barrage, 8.5 km"
+          metric="discharge_cusecs"
+          value={wazirabad?.originalDischarge}
+          unit="cusecs"
+          observedAt={wazirabad?.issueTime || ''}
+          quality={{ state: 'good', reasons: [], uncertainty: null }}
+          provenance={{
+            sourceId: 'barrage-bulletin',
+            origin: 'official_observation',
+            sourceRecordId: wazirabad?.bulletinRef || '',
+            methodVersion: 'gate-release-bulletin',
+            baselineId: null,
+            inputIds: ['STA-WAZIRABAD'],
+            limitation: 'Observed barrage release. Not a water-level measurement at Bridge 249.',
+          }}
+          policy={barragePolicy}
           condition="within_range"
-          onOpenProvenance={radarObs ? () => openProvenance('Local River Radar (Bridge 249)', radarObs) : undefined}
+          companion={
+            wazirabad
+              ? {
+                  label: 'Travel to Bridge 249',
+                  value: wazirabad.travelTimeEstimateHours || 'Not modelled',
+                }
+              : undefined
+          }
+          onOpenProvenance={
+            wazirabad
+              ? () =>
+                  openProvenance('Wazirabad Barrage Release Bulletin', {
+                    sourceId: 'barrage-bulletin',
+                    origin: 'official_observation',
+                    sourceRecordId: wazirabad.bulletinRef,
+                    issuer: wazirabad.issuer,
+                    dischargeCusecs: wazirabad.originalDischarge,
+                    dischargeM3s: Math.round(wazirabad.normalizedDischargeM3s),
+                    limitation: 'Observed barrage release. Not a water-level measurement at Bridge 249.',
+                  })
+              : undefined
+          }
         />
 
         {/* Card 3: Upstream Basin Rainfall */}

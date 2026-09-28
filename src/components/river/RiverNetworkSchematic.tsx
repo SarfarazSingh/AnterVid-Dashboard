@@ -77,14 +77,10 @@ export const RiverNetworkSchematic: React.FC = () => {
         <div className="space-y-2 py-2">
           {riverStations.map((station, idx) => {
             const isSelected = selectedStationId === station.id;
-            const isBridgeSite = station.id === 'STA-BR249-RADAR';
-            const isCwcOrb = station.id === 'STA-ORB-CWC';
 
             let bgClass = 'bg-slate-50 border-slate-200 hover:bg-slate-100';
             if (isSelected) {
               bgClass = 'bg-blue-50 border-blue-400 ring-1 ring-blue-300';
-            } else if (isBridgeSite) {
-              bgClass = 'bg-emerald-50/70 border-emerald-300';
             }
 
             return (
@@ -121,11 +117,6 @@ export const RiverNetworkSchematic: React.FC = () => {
                       {station.type === 'cwc_gauge' && (
                         <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">
                           Official CWC Gauge
-                        </span>
-                      )}
-                      {station.type === 'local_radar' && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                          Local Radar Site
                         </span>
                       )}
                     </div>

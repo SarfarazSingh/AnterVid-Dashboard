@@ -99,7 +99,7 @@ export interface Sensor {
   assetId: string;
   pierId: string;
   name: string;
-  deviceType: 'sonar' | 'vibration_tilt' | 'river_radar' | 'cabinet_temp' | 'telltale_displacement';
+  deviceType: 'sonar' | 'vibration_tilt' | 'cabinet_temp' | 'telltale_displacement';
   channels: string[];
   units: Record<string, string>;
   mountReference: ReferenceMount;
@@ -142,7 +142,7 @@ export interface RiverStation {
   id: string;
   name: string;
   river: string;
-  type: 'cwc_gauge' | 'barrage' | 'drain_inflow' | 'local_radar';
+  type: 'cwc_gauge' | 'barrage' | 'drain_inflow';
   distanceKmFromBridge: number;
   flowDirection: 'upstream' | 'at_bridge' | 'downstream';
   warningLevelM: number | null;
@@ -339,7 +339,6 @@ export type ScenarioId =
   | 'degraded_sonar'
   | 'all_sonar_unavailable'
   | 'scalar_only_vibration'
-  | 'optional_sensors_uncommissioned'
   | 'stale_telemetry'
   | 'comms_loss_backfill'
   | 'river_warning'

@@ -24,6 +24,10 @@ interface MetricCardProps {
     delta: number;
     unit: string;
   };
+  companion?: {
+    label: string;
+    value: string;
+  };
   isSelected?: boolean;
   onClick?: () => void;
   onOpenProvenance?: () => void;
@@ -41,6 +45,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   condition = 'within_range',
   subtitle,
   comparisonBaseline,
+  companion,
   isSelected = false,
   onClick,
   onOpenProvenance,
@@ -121,6 +126,12 @@ export const MetricCard: React.FC<MetricCardProps> = ({
               {quality.reasons.length > 0 && (
                 <span className="text-xs text-rose-600">({quality.reasons[0]})</span>
               )}
+            </div>
+          )}
+          {companion && (
+            <div className="mt-1 text-[11px] text-slate-500">
+              <span className="text-slate-400">{companion.label}: </span>
+              <span className="font-semibold text-slate-700">{companion.value}</span>
             </div>
           )}
         </div>

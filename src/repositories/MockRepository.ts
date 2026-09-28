@@ -248,15 +248,6 @@ export class MockRepository implements Repository {
         break;
       }
 
-      case 'optional_sensors_uncommissioned': {
-        const radar = this.sensors.find((s) => s.id === 'RADAR-BR249-01');
-        if (radar) {
-          radar.capabilities.isCommissioned = false;
-          radar.capabilities.isPlanned = true;
-        }
-        break;
-      }
-
       case 'stale_telemetry': {
         // Telemetry timestamp pushed back 45 minutes
         const oldTimestamp = new Date(new Date(DEFAULT_DEMO_CLOCK_UTC).getTime() - 45 * 60 * 1000).toISOString();
