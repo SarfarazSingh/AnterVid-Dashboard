@@ -1,0 +1,168 @@
+import React from 'react';
+import { useApp } from '../../context/AppContext';
+import { formatToIST } from '../../utils/dateUtils';
+import { TimeRangeSelector } from '../shared/TimeRangeSelector';
+import {
+  Activity,
+  Layers,
+  FileSpreadsheet,
+  Settings,
+  Bell,
+  Pause,
+  Play,
+  CheckCircle2,
+  AlertTriangle,
+} from 'lucide-react';
+
+export const Header: React.FC = () => {
+  const {
+    asset,
+    events,
+    sourceStatuses,
+    demoClockIso,
+    isClockPaused,
+    toggleClockPause,
+    selectedTimeRange,
+    setTimeRange,
+    currentScenario,
+    setIsEventsDrawerOpen,
+    setIsDataSourcesModalOpen,
+    setIsReportsModalOpen,
+    setIsScenarioSwitcherOpen,
+  } = useApp();
+
+  const unacknowledgedEvents = events.filter((e) => e.workflowStatus === 'unacknowledged');
+  const hasCritical = unacknowledgedEvents.some((e) => e.condition === 'warning' || e.condition === 'critical');
+  const hasAuthRequired = sourceStatuses.some((s) => s.accessState === 'authentication_required');
+
+  return (
+    <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-14 gap-4">
+          {/* Brand & Asset Identity */}
+          <div className="flex items-center gap-3">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <span className="font-extrabold text-base tracking-tight text-slate-900">
+                  SAMAST
+                </span>
+                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                  by AnterVid
+                </span>
+              </div>
+              <span className="text-[11px] text-slate-500 font-medium leading-none">
+                Bridge River & Ground Intelligence
+              </span>
+            </div>
+
+            <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
+
+            {/* Asset Selector */}
+            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded px-2.5 py-1 text-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="font-semibold text-slate-800">{asset?.name || 'Bridge 249'}</span>
+              <span className="text-slate-400 text-[11px] hidden md:inline">
+                ({asset?.river}, Delhi)
+              </span>
+            </div>
+
+            {/* Explicit Demo Badge */}
+            <span
+              className="badge badge-demo cursor-pointer"
+              onClick={() => setIsScenarioSwitcherOpen(true)}
+              title="Click to change deterministic demonstration scenario"
+            >
+              DEMO MODE
+            </span>
+          </div>
+
+          {/* Clock, Time Range & Tools */}
+          <div className="flex items-center gap-3">
+            {/* Controlled Demo Clock */}
+            <div
+              className="hidden lg:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded px-2.5 py-1 text-xs"
+              title="Controlled operations clock fixed at 12 Sep 2026 14:35 IST for deterministic demo"
+            >
+              <div className="flex flex-col text-right">
+                <span className="font-mono font-semibold text-slate-800 text-[12px]">
+                  {formatToIST(demoClockIso, true)}
+                </span>
+                <span className="text-[10px] text-slate-400 font-medium">
+                  Controlled Demo Clock
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={toggleClockPause}
+                className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition"
+                title={isClockPaused ? 'Resume Clock' : 'Pause Clock for Inspection'}
+              >
+                {isClockPaused ? <Play size={12} className="text-blue-600" /> : <Pause size={12} />}
+              </button>
+            </div>
+
+            {/* Time Range Selector */}
+            <div className="hidden md:block">
+              <TimeRangeSelector selected={selectedTimeRange} onChange={setTimeRange} />
+            </div>
+
+            {/* Event Notification Button */}
+            <button
+              type="button"
+              onClick={() => setIsEventsDrawerOpen(true)}
+              className={`btn btn-sm relative ${
+                hasCritical
+                  ? 'btn-danger'
+                  : unacknowledgedEvents.length > 0
+                  ? 'btn-secondary text-amber-700 border-amber-300 bg-amber-50'
+                  : 'btn-secondary text-slate-700'
+              }`}
+              title="Open Operator Event Timeline & Drawer"
+            >
+              <Bell size={14} />
+              <span>Events</span>
+              {unacknowledgedEvents.length > 0 && (
+                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500 text-white">
+                  {unacknowledgedEvents.length}
+                </span>
+              )}
+            </button>
+
+            {/* Data Sources Status */}
+            <button
+              type="button"
+              onClick={() => setIsDataSourcesModalOpen(true)}
+              className="btn btn-secondary btn-sm"
+              title="Inspect Upstream Data Feed Connections & Latency"
+            >
+              <Activity size={14} className={hasAuthRequired ? 'text-amber-600' : 'text-slate-500'} />
+              <span className="hidden sm:inline">Data Sources</span>
+            </button>
+
+            {/* Reports Export */}
+            <button
+              type="button"
+              onClick={() => setIsReportsModalOpen(true)}
+              className="btn btn-secondary btn-sm"
+              title="Generate Synthetic CSV and Print Summaries"
+            >
+              <FileSpreadsheet size={14} className="text-slate-500" />
+              <span className="hidden sm:inline">Reports</span>
+            </button>
+
+            {/* Scenarios / Demo Switcher */}
+            <button
+              type="button"
+              onClick={() => setIsScenarioSwitcherOpen(true)}
+              className="btn btn-primary btn-sm"
+              title="Switch Demo Scenarios (Scour, River Warning, Outage, etc.)"
+            >
+              <Settings size={14} />
+              <span className="hidden sm:inline">Scenarios</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
