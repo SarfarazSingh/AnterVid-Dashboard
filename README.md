@@ -90,7 +90,7 @@ The dashboard includes a dedicated **Scenario Switcher** (`Scenarios` button in 
 | `degraded_sonar` | Degraded Acoustic Return | Sonar 01 reports weak acoustic return without claiming turbidity cause. |
 | `all_sonar_unavailable` | All Sonar Unavailable | Power brownout on acoustic array; values null with retained last valid history. |
 | `scalar_vibration_only` | Scalar-Only Vibration Device | Gated waveform/modal views with explanatory capability badges. |
-| `optional_uncommissioned` | Optional Sensors Not Commissioned | Pier 10 reference sensor and cabinet temperature channel uncommissioned. |
+| `optional_uncommissioned` | River Radar Uncommissioned | Local river radar pending field commissioning. |
 | `stale_telemetry` | Stale Sensor Telemetry | Telemetry gateway delay > 45 minutes; displays stale age badge. |
 | `comms_loss_backfill` | Communications Loss & Backfill | Network disconnect followed by timestamped packet backfilling. |
 | `river_warning` | Official River Warning Context | CWC ORB stage rises to 204.62 m exceeding Warning Level (204.50 m). |

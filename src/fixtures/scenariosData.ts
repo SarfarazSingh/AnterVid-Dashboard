@@ -38,10 +38,10 @@ export const ALL_SCENARIOS: DemoScenario[] = [
   },
   {
     id: 'optional_sensors_uncommissioned',
-    name: '6. Requested Sensors Uncommissioned',
+    name: '6. River Radar Uncommissioned',
     category: 'Bridge Sensors',
-    shortDescription: 'Pier 10 reference vibration and local river radar pending field commissioning.',
-    expectedVisibleBehavior: 'P10 sensor shows "Planned / Not Commissioned". River radar omitted from commissioned denominator (4/5 active).',
+    shortDescription: 'Local river radar pending field commissioning.',
+    expectedVisibleBehavior: 'River radar shows "Planned / Not Commissioned" and is omitted from the commissioned channel count.',
   },
   {
     id: 'stale_telemetry',

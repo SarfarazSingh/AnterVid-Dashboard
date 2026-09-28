@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Pier } from '../../types/domain';
-import { AlertTriangle, CheckCircle, Info, Layers, Eye, Maximize2, Compass } from 'lucide-react';
+import { CheckCircle, Info, Layers, Eye, Maximize2, Compass } from 'lucide-react';
 import bridgeScourDiagramImg from '../../assets/images/bridge249_scour_diagram.jpg';
 
 export const BridgeSchematic: React.FC = () => {
@@ -60,9 +60,6 @@ export const BridgeSchematic: React.FC = () => {
             </span>
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-slate-300 inline-block" /> Uninstrumented
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" /> Requested (P10)
             </span>
           </div>
         </div>
@@ -196,7 +193,6 @@ export const BridgeSchematic: React.FC = () => {
             {piers.map((pier, index) => {
               const px = 100 + index * 52;
               const isP11 = pier.id === 'P11';
-              const isP10 = pier.id === 'P10';
               const isSelected = selectedPierId === pier.id;
 
               return (
@@ -223,7 +219,7 @@ export const BridgeSchematic: React.FC = () => {
                     y={71}
                     width={12}
                     height={144}
-                    fill={isSelected ? '#60a5fa' : isP11 ? '#2563eb' : isP10 ? '#fde047' : '#94a3b8'}
+                    fill={isSelected ? '#60a5fa' : isP11 ? '#2563eb' : '#94a3b8'}
                     stroke={isSelected ? '#1d4ed8' : '#334155'}
                     strokeWidth={isSelected ? '2' : '1'}
                     rx="1"
@@ -297,11 +293,6 @@ export const BridgeSchematic: React.FC = () => {
             <span className="text-blue-700 font-semibold flex items-center gap-1">
               <CheckCircle size={13} className="text-blue-600" />
               Commissioned Sensor Suite Active (3 Sonar, 1 Vib/Tilt, KLEON Gateway)
-            </span>
-          ) : selectedPierId === 'P10' ? (
-            <span className="text-amber-700 font-semibold flex items-center gap-1">
-              <AlertTriangle size={13} className="text-amber-500" />
-              Requested Reference Vibration Sensor (Pending Commissioning)
             </span>
           ) : (
             <span className="text-slate-500">Uninstrumented Pier — Monitored via Visual Inspection</span>

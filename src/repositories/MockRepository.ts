@@ -249,11 +249,6 @@ export class MockRepository implements Repository {
       }
 
       case 'optional_sensors_uncommissioned': {
-        const refVib = this.sensors.find((s) => s.id === 'P10-VT-REF');
-        if (refVib) {
-          refVib.capabilities.isCommissioned = false;
-          refVib.capabilities.isPlanned = true;
-        }
         const radar = this.sensors.find((s) => s.id === 'RADAR-BR249-01');
         if (radar) {
           radar.capabilities.isCommissioned = false;
