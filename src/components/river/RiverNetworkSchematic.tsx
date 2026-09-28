@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { RiverStation } from '../../types/domain';
 import { ArrowDown, Info, ShieldAlert, Waves, CheckCircle2, Map, List, Compass } from 'lucide-react';
+import yamunaHydrologyImg from '../../assets/images/yamuna_hydrology_network.jpg';
 
 export const RiverNetworkSchematic: React.FC = () => {
   const { riverStations, releaseBulletins } = useApp();
@@ -57,7 +58,7 @@ export const RiverNetworkSchematic: React.FC = () => {
         /* Visual Hydrological Basin Map */
         <div className="relative w-full rounded overflow-hidden my-2 border border-slate-200 bg-slate-950 flex flex-col items-center">
           <img
-            src="/images/yamuna_hydrology_network.jpg"
+            src={yamunaHydrologyImg}
             alt="Yamuna River Hydrological Monitoring Network"
             className="w-full h-auto max-h-[380px] object-cover"
           />

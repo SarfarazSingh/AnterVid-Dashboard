@@ -15,6 +15,10 @@ import {
   Camera,
 } from 'lucide-react';
 
+// Direct Vite asset imports for guaranteed path resolution on GitHub Pages & Localhost
+import baselineLowWaterImg from '../../assets/images/yamuna_baseline_lowwater.jpg';
+import monsoonSurgeImg from '../../assets/images/yamuna_monsoon_surge.jpg';
+
 interface GroundComparisonMapProps {
   layerVisibility: Record<string, boolean>;
   layerOpacity: Record<string, number>;
@@ -155,30 +159,88 @@ export const GroundComparisonMap: React.FC<GroundComparisonMapProps> = ({
         onMouseUp={() => setIsDragging(false)}
         onMouseLeave={() => setIsDragging(false)}
         onTouchMove={handleTouchMove}
-        className="relative flex-1 bg-slate-900 rounded border border-slate-200 overflow-hidden select-none min-h-[460px]"
+        className="relative flex-1 bg-slate-100 rounded border border-slate-300 overflow-hidden select-none min-h-[460px]"
       >
+        {/* Layer 0: Always-Visible Rich Vector Fallback & Basemap */}
+        <div className="absolute inset-0 w-full h-full overflow-hidden">
+          <svg
+            viewBox="0 0 800 460"
+            className="w-full h-full object-cover"
+            style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center' }}
+          >
+            <defs>
+              <linearGradient id="vectorWaterGradient" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.8" />
+                <stop offset="50%" stopColor="#2563eb" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.85" />
+              </linearGradient>
+              <linearGradient id="sandbarGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#fef08a" />
+                <stop offset="100%" stopColor="#fde047" />
+              </linearGradient>
+            </defs>
+
+            {/* Alluvial Floodplain Terrain */}
+            <rect x="0" y="0" width="800" height="460" fill="#f8fafc" />
+
+            {/* Urban Settlement Embankments on East & West */}
+            <path d="M 0,0 L 260,0 L 230,460 L 0,460 Z" fill="#f1f5f9" stroke="#e2e8f0" />
+            <path d="M 540,0 L 800,0 L 800,460 L 570,460 Z" fill="#f1f5f9" stroke="#e2e8f0" />
+
+            {/* Winding Yamuna River Channel */}
+            <path
+              d="M 280,0 C 340,120 310,220 330,320 C 350,390 380,430 400,460 L 540,460 C 510,400 480,310 470,220 C 460,130 490,50 510,0 Z"
+              fill="url(#vectorWaterGradient)"
+            />
+
+            {/* Braided Sandbars / Sediment Islands */}
+            <path
+              d="M 370,140 Q 400,180 385,250 Q 365,220 370,140 Z"
+              fill="url(#sandbarGradient)"
+              stroke="#eab308"
+              strokeWidth="0.8"
+            />
+            <path
+              d="M 420,290 Q 445,340 430,380 Q 410,350 420,290 Z"
+              fill="url(#sandbarGradient)"
+              stroke="#eab308"
+              strokeWidth="0.8"
+            />
+
+            {/* Grid Coordinates Overlay */}
+            <line x1="200" y1="0" x2="200" y2="460" stroke="#cbd5e1" strokeWidth="0.5" strokeDasharray="5,5" />
+            <line x1="400" y1="0" x2="400" y2="460" stroke="#cbd5e1" strokeWidth="0.5" strokeDasharray="5,5" />
+            <line x1="600" y1="0" x2="600" y2="460" stroke="#cbd5e1" strokeWidth="0.5" strokeDasharray="5,5" />
+            <line x1="0" y1="230" x2="800" y2="230" stroke="#cbd5e1" strokeWidth="0.5" strokeDasharray="5,5" />
+            <text x="210" y="25" fill="#94a3b8" fontSize="8" fontFamily="monospace">77°14'E</text>
+            <text x="410" y="25" fill="#94a3b8" fontSize="8" fontFamily="monospace">77°15'E</text>
+            <text x="610" y="25" fill="#94a3b8" fontSize="8" fontFamily="monospace">77°16'E</text>
+            <text x="10" y="224" fill="#94a3b8" fontSize="8" fontFamily="monospace">28°40'N</text>
+          </svg>
+        </div>
+
         {comparisonMode === 'side_by_side' ? (
           /* Side by Side Mode */
-          <div className="grid grid-cols-2 h-full w-full gap-1 bg-slate-800">
+          <div className="absolute inset-0 grid grid-cols-2 h-full w-full gap-1 bg-slate-800 z-10">
             {/* Left: Baseline Date */}
-            <div className="relative h-full overflow-hidden border-r border-slate-700">
-              <div className="absolute top-2 left-2 z-10 bg-slate-900/80 backdrop-blur-xs text-white text-[11px] px-2 py-0.5 rounded border border-slate-700">
+            <div className="relative h-full overflow-hidden border-r border-slate-700 bg-slate-900">
+              <div className="absolute top-2 left-2 z-20 bg-slate-900/85 backdrop-blur-xs text-white text-[11px] px-2 py-0.5 rounded border border-slate-700">
                 Baseline: {datePair[0]} (Pre-monsoon Low Water)
               </div>
               <img
-                src="/images/yamuna_baseline_lowwater.jpg"
+                src={baselineLowWaterImg}
                 alt="Yamuna Baseline"
                 className="w-full h-full object-cover"
                 style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center' }}
               />
             </div>
             {/* Right: Comparison Date */}
-            <div className="relative h-full overflow-hidden">
-              <div className="absolute top-2 left-2 z-10 bg-blue-900/80 backdrop-blur-xs text-white text-[11px] px-2 py-0.5 rounded border border-blue-700">
+            <div className="relative h-full overflow-hidden bg-slate-900">
+              <div className="absolute top-2 left-2 z-20 bg-blue-900/85 backdrop-blur-xs text-white text-[11px] px-2 py-0.5 rounded border border-blue-700">
                 Comparison: {datePair[1]} (Monsoon Flood Surge)
               </div>
               <img
-                src="/images/yamuna_monsoon_surge.jpg"
+                src={monsoonSurgeImg}
                 alt="Yamuna Monsoon Surge"
                 className="w-full h-full object-cover"
                 style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center' }}
@@ -187,12 +249,12 @@ export const GroundComparisonMap: React.FC<GroundComparisonMapProps> = ({
           </div>
         ) : (
           /* Single Overlay or Swipe Curtain Mode */
-          <div className="relative w-full h-full">
-            {/* Background Layer (Date 1 / Baseline: 15 Aug 2026 - Low Water with Sandbars) */}
-            <div className="absolute inset-0 w-full h-full overflow-hidden">
-              {mapStyle === 'satellite' ? (
+          <div className="absolute inset-0 w-full h-full">
+            {/* Layer 1: Date 1 / Baseline Satellite Imagery (15 Aug 2026) */}
+            {mapStyle === 'satellite' && (
+              <div className="absolute inset-0 w-full h-full overflow-hidden">
                 <img
-                  src="/images/yamuna_baseline_lowwater.jpg"
+                  src={baselineLowWaterImg}
                   alt="Yamuna Baseline Satellite"
                   className="w-full h-full object-cover"
                   style={{
@@ -201,51 +263,41 @@ export const GroundComparisonMap: React.FC<GroundComparisonMapProps> = ({
                     opacity: layerOpacity['LAYER-S2-RGB'] || 1.0,
                   }}
                 />
-              ) : (
-                <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 font-mono text-xs">
-                  [Vector GIS Baseline Map]
-                </div>
-              )}
-            </div>
+              </div>
+            )}
 
-            {/* Foreground Layer (Date 2 / Comparison: 20 Sep 2026 - High Flood Surge) clipped by Swipe Slider */}
-            {comparisonMode === 'swipe' && (
+            {/* Layer 2: Date 2 / Comparison Monsoon Surge Satellite (20 Sep 2026) clipped by Swipe Slider */}
+            {mapStyle === 'satellite' && comparisonMode === 'swipe' && (
               <div
                 className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none"
                 style={{
                   clipPath: `polygon(${swipePosition}% 0, 100% 0, 100% 100%, ${swipePosition}% 100%)`,
                 }}
               >
-                {mapStyle === 'satellite' ? (
-                  <img
-                    src="/images/yamuna_monsoon_surge.jpg"
-                    alt="Yamuna Monsoon Surge Satellite"
-                    className="w-full h-full object-cover"
-                    style={{
-                      transform: `scale(${zoomLevel})`,
-                      transformOrigin: 'center center',
-                      opacity: layerOpacity['LAYER-S2-RGB'] || 1.0,
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full bg-blue-100/70 flex items-center justify-center text-blue-600 font-mono text-xs">
-                    [Vector Inundated Water Layer]
-                  </div>
-                )}
+                <img
+                  src={monsoonSurgeImg}
+                  alt="Yamuna Monsoon Surge Satellite"
+                  className="w-full h-full object-cover"
+                  style={{
+                    transform: `scale(${zoomLevel})`,
+                    transformOrigin: 'center center',
+                    opacity: layerOpacity['LAYER-S2-RGB'] || 1.0,
+                  }}
+                />
               </div>
             )}
 
             {/* Draggable Swipe Divider Line & Handle */}
             {comparisonMode === 'swipe' && (
               <div
-                className="absolute top-0 bottom-0 z-20 cursor-ew-resize flex items-center justify-center"
-                style={{ left: `${swipePosition}%`, width: '4px', transform: 'translateX(-50%)' }}
+                className="absolute top-0 bottom-0 z-20 cursor-ew-resize flex items-center justify-center pointer-events-auto"
+                style={{ left: `${swipePosition}%`, width: '12px', transform: 'translateX(-50%)' }}
                 onMouseDown={() => setIsDragging(true)}
                 onTouchStart={() => setIsDragging(true)}
               >
-                <div className="w-0.5 h-full bg-white shadow-md" />
-                <div className="absolute w-7 h-7 rounded-full bg-white shadow-lg border border-slate-300 flex items-center justify-center text-slate-700 hover:scale-110 transition active:scale-95">
-                  <Split size={14} className="rotate-90" />
+                <div className="w-0.5 h-full bg-white shadow-[0_0_8px_rgba(0,0,0,0.8)]" />
+                <div className="absolute w-8 h-8 rounded-full bg-white shadow-xl border-2 border-blue-600 flex items-center justify-center text-blue-700 hover:scale-110 transition active:scale-95">
+                  <Split size={15} className="rotate-90" />
                 </div>
               </div>
             )}
@@ -253,12 +305,12 @@ export const GroundComparisonMap: React.FC<GroundComparisonMapProps> = ({
             {/* Interactive Vector GIS Overlay: Transects, InSAR points, Bridge alignment */}
             <svg
               viewBox="0 0 800 460"
-              className="absolute inset-0 w-full h-full pointer-events-auto"
+              className="absolute inset-0 w-full h-full pointer-events-auto z-10"
               style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center' }}
             >
               <defs>
                 <filter id="shadowGlow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="1" stdDeviation="2" floodColor="#000" floodOpacity="0.6" />
+                  <feDropShadow dx="0" dy="1" stdDeviation="2" floodColor="#000" floodOpacity="0.75" />
                 </filter>
               </defs>
 
@@ -387,7 +439,7 @@ export const GroundComparisonMap: React.FC<GroundComparisonMapProps> = ({
             </svg>
 
             {/* Date Legend Labels on Canvas */}
-            <div className="absolute top-3 left-3 z-10 flex flex-col gap-1 pointer-events-none">
+            <div className="absolute top-3 left-3 z-20 flex flex-col gap-1 pointer-events-none">
               <span className="bg-slate-900/85 backdrop-blur-xs text-white text-[11px] px-2.5 py-1 rounded shadow-md border border-slate-700 flex items-center gap-1.5 font-medium">
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 Left: {datePair[0]} (Low Water Baseline)
@@ -401,7 +453,7 @@ export const GroundComparisonMap: React.FC<GroundComparisonMapProps> = ({
             </div>
 
             {/* Bottom Scale & Orientation Overlay */}
-            <div className="absolute bottom-3 left-3 z-10 bg-slate-900/80 backdrop-blur-xs text-slate-300 text-[10px] px-2 py-1 rounded border border-slate-700 flex items-center gap-3">
+            <div className="absolute bottom-3 left-3 z-20 bg-slate-900/85 backdrop-blur-xs text-slate-300 text-[10px] px-2 py-1 rounded border border-slate-700 flex items-center gap-3">
               <div className="flex items-center gap-1 font-mono">
                 <Compass size={12} className="text-blue-400" />
                 <span>N ↑</span>
@@ -417,8 +469,8 @@ export const GroundComparisonMap: React.FC<GroundComparisonMapProps> = ({
 
             {/* Swipe Instruction Cue */}
             {comparisonMode === 'swipe' && (
-              <div className="absolute bottom-3 right-3 z-10 bg-white/90 backdrop-blur-xs text-slate-700 text-[11px] px-2 py-1 rounded shadow border border-slate-200 pointer-events-none flex items-center gap-1.5 font-medium">
-                <Split size={12} className="text-blue-600 rotate-90" />
+              <div className="absolute bottom-3 right-3 z-20 bg-white/95 backdrop-blur-xs text-slate-700 text-[11px] px-2.5 py-1 rounded shadow-md border border-slate-200 pointer-events-none flex items-center gap-1.5 font-medium">
+                <Split size={13} className="text-blue-600 rotate-90" />
                 Drag center divider to swipe between dates
               </div>
             )}

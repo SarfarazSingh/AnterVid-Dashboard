@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Pier } from '../../types/domain';
 import { AlertTriangle, CheckCircle, Info, Layers, Eye, Maximize2, Compass } from 'lucide-react';
+import bridgeScourDiagramImg from '../../assets/images/bridge249_scour_diagram.jpg';
 
 export const BridgeSchematic: React.FC = () => {
   const { piers, selectedPierId, selectPier, observations, sensors, selectSensor } = useApp();
@@ -71,7 +72,7 @@ export const BridgeSchematic: React.FC = () => {
         /* 3D Engineering Cross-Section View */
         <div className="relative w-full rounded overflow-hidden my-2 border border-slate-200 bg-slate-900 min-h-[300px]">
           <img
-            src="/images/bridge249_scour_diagram.jpg"
+            src={bridgeScourDiagramImg}
             alt="Bridge 249 Pier Scour Engineering Cross-Section"
             className="w-full h-auto max-h-[380px] object-cover object-center"
           />
